@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>title</title>
+    <style>
+        h1 {
+            background-color: rgb(153, 0, 0);
+            text-align: center;
+            color: #ffffd2;
+            border-bottom: 10px solid red;
+            font-family: Arial, Helvetica, sans-serif;
+            font-style: italic;
+            font-size: xx-large;
+            letter-spacing: 10px;
+        }
+
+        h2 {
+            background-color: rgb(0, 153, 0);
+            color: white;
+            padding: 6px;
+            padding-left: 20px;
+        }
+
+        ul {
+            color: rgb(163, 23, 18);
+            font-family: Arial, Helvetica, sans-serif;
+            font-style: italic;
+        }
+
+        table {
+            background-color: rgb(204, 204, 204);
+            border: 1px solid black;
+        }
+
+        .tableForm {
+            color: grey;
+            font-weight: bold;
+        }
+
+        textarea {
+            height: 110px;
+        }
+    </style>
+</head>
+
+<body style="background-color: rgb(240, 240, 189); font-family: Arial, Helvetica, sans-serif;">
+    <h1>My &nbsp; first &nbsp; Web &nbsp; Page</h1>
+    <h2>What is this</h2>
+    <p>Welcome to my first webpage. I created this webpage without the assitance of a webpage editor. Just my little
+        text editor and a keen <span style="font-weight: bold; font-style: italic;">UNDERSTANDING OF HTML </span>
+    <p>
+    <h2>Why this is</h2>
+    <ul>
+        <li>To learn HTML</li>
+        <li>List Element</li>
+        <ol>
+            <li>Home</li>
+            <li>FAQ</li>
+            <li>Contact</li>
+            <li>About</li>
+        </ol>
+        <li>Here i have created oredered and unordered list</li>
+    </ul>
+    <h2>ZeusLearning.com</h2>
+    <a href="https://zeuslearning.com" target="_blank" style="color: rgb(143, 31, 135); text-decoration: none;">This
+        Link will open
+        ZeusLearning.com in new tab</a>
+    <h2>On click of following image navigate to Google.com</h2>
+    <a href="http://google.com"><img
+            src="https://media-cldnry.s-nbcnews.com/image/upload/t_nbcnews-fp-1200-630,f_auto,q_auto:best/streams/2013/March/130326/1C6639340-google-logo.jpg"
+            style="border: dashed; color: grey;" alt="Loading" width="170"></a>
+
+    <p class="tableForm">Some Random Table:</p>
+    <table border="1px">
+        <tr>
+            <td>Row 1, cell 1</td>
+            <td>Row 1, cell 2</td>
+            <td>Row 1, cell 3</td>
+        </tr>
+        <tr>
+            <td>Row 2, cell 1</td>
+            <td>Row 2, cell 2</td>
+            <td>Row 2, cell 3</td>
+        </tr>
+        <tr>
+            <td>Row 3, cell 1</td>
+            <td>Row 3, cell 2</td>
+            <td>Row 3, cell 3</td>
+        </tr>
+    </table>
+
+    <p class="tableForm">Some Random Form:</p>
+    <form id="myform" action="" onsubmit="alert(validateForm(event))">
+        <p><span style="font-style: italic; font-weight: bold;">NOTE:</span> It looks like the part but won't do
+            anything</p>
+
+        <label for="myname">Name:</label><br><br>
+        <input type="text" name="name" id="myname" placeholder="Your name"><br><br>
+        
+        <label for="mycomments">Comments:</label><br><br>
+        <textarea name="comments" id="mycomments" placeholder="Your Comments"></textarea><br>
+
+        <label>Are you:</label><br>
+        <input type="radio" name="gender" id="male">
+
+        <label for="male">Male</label><br>
+        <input type="radio" name="gender" id="female">
+        <label for="female">Female</label><br><br>
+
+        <button type="submit">Submitt Query</button>
+    </form>
+
+    <script>
+        document.getElementById('myform').addEventListener('submit',function(event){
+            event.preventDefault();
+        });
+        function validateForm() {
+            let name = document.getElementById('myname').value;
+            let comments = document.getElementById('mycomments').value;
+
+            if(name.trim() === "" || comments.trim() === ""){
+                return true;
+            }
+            return true;
+        }
+    </script>
+
+
+</body>
+
+</html>
