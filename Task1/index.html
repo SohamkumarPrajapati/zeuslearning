@@ -102,7 +102,7 @@
         <label for="mycomments">Comments:</label><br><br>
         <textarea name="comments" id="mycomments" placeholder="Your Comments"></textarea><br>
 
-        <label>Are you:</label><br>
+        <label>Are you:</label><br><br>
         <input type="radio" name="gender" id="male">
 
         <label for="male">Male</label><br>
@@ -120,8 +120,17 @@
             let name = document.getElementById('myname').value;
             let comments = document.getElementById('mycomments').value;
 
-            if(name.trim() === "" || comments.trim() === ""){
-                return true;
+            if(name.trim() === ""){
+                document.getElementById('myname').focus();
+                return "Fill the required data";
+            }if(comments.trim() === ""){
+                document.getElementById('mycomments').focus();
+                return "Fill the required data";
+            }
+
+            let gender = document.querySelector('input[name = "gender"]:checked');
+            if(!gender){
+                return "Please Select the gender!";
             }
             return true;
         }
