@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Big Factorial Calculator</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        #factAns {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Factorial Calculator</h1>
+    <p id="factAns">Calculating...</p>
+
+    <script>
+        function calculateFactorial(n) {
+            let result = 1n;
+            for (let i = 2n; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+
+        let input = prompt("Enter a number to find its factorial:");
+        let num = BigInt(input);  // Handles big input as BigInt
+
+        if (num < 0n) {
+            document.getElementById("factAns").textContent = "Factorial is not defined for negative numbers.";
+        } else {
+            let factorial = calculateFactorial(num);
+            document.getElementById("factAns").textContent = factorial;
+        }
+    </script>
+
+</body>
+
+</html>
