@@ -193,7 +193,7 @@
             padding-top: 16px;
             display: grid;
             width: 97%;
-            height: 516px;
+            height: 740px;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
             column-gap: 24px;
@@ -208,6 +208,27 @@
 
         .content31 {
             grid-column: 1/2;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .img1 {
+            grid-column: 1/2;
+            grid-row: 1/4;
+            background-color: skyblue;
+            background-image: url('quantum screen assets/images/imageMask-1.svg');
+            background-size: cover;
+        }
+
+        .data1 {
+            grid-column: 2/5;
+            width: 100%;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
         }
     </style>
 </head>
@@ -265,7 +286,18 @@
             </div>
         </div>
         <div class="content3">
-            <div class="content31"></div>
+            <div class="content31">
+                <div class="img1"></div>
+                <div class="data1">
+                    <div style="font-size: 16px; font-weight: 600;">Acceleration</div>
+                    <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
+                </div>
+                <div class="data2">
+                    <div>Physics | Grade & 7 <span style="color: green;">+2</span></div>
+                    <div><b>4</b> Units <b>18</b> Lessons <b>24</b>Topics</div>
+                </div>
+                <div class="bottomIcons"></div>
+            </div>
             <div class="content32"></div>
             <div class="content33"></div>
             <div class="content34"></div>
