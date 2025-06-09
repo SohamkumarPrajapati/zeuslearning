@@ -1,0 +1,10 @@
+flex : __ === is a short form for flex-grow,flex-shrink and flex-basis;
+flex-grow : __ === sets the growing size of flex item and speed at which it will increase if the width of screen is increased
+flex-shrink : __ === same as grow but will decrease the size //0 means no shrink same goes for grow
+flex-basis : __ == it sets the base width of the flex elements
+
+flex-direction : row,column,reverse-row,reverse-column === sets the main axis either row wise or column wise
+justify-content : ________ === adjusts the items along the main axis, horizontal in row flex-direction and vertical in column
+align-items : _______ === adjust the items along the cross axis(perpendicular to main axis)
+align-self : _______ === adjust the single item along the cross axis
+flex-wrap : _______ === wraps the items if the width of the container is modified [nowrap->items size will shrink]

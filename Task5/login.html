@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body,
+        html {
+            width: 100%;
+            margin: 0;
+            background-color: #EEEEEE;
+            overflow: auto;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: fixed;
+            z-index: 1000;
+            height: 40px;
+            width: 100%;
+            background-color: black;
+            background-image: url(./quantum\ screen\ assets/headerImage.png);
+            padding-left: 24px;
+            padding-top: 10.5px;
+            padding-bottom: 9.5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        main {
+            margin-top: 58px;
+            /* min-height: calc(100vh - 56px - 40px);  */
+            width: 100%;
+            background-color: #EEEEEE;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-top: 20px;
+        }
+
+        form {
+            width: 32%;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .loginForm {
+            width: 100%;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            font-family: 'QuickSand';
+            row-gap: 20px;
+            border-top: 4px;
+            border-top-color: #3AC7EC;
+            /* margin-top: auto; */
+        }
+
+        .content1 {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 16px;
+        }
+
+        .loginFormHeader {
+            width: 240px;
+            height: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 20px;
+        }
+
+        .arrowIcon {
+            height: 30px;
+            padding-top: 2px;
+        }
+
+        footer {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lastFooter {
+            background-color: #E0E1E1;
+            height: 40px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: auto;
+        }
+
+        .lastFooter>div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .aboutContact {
+            height: 34px;
+            width: 100%;
+            color: #1F7A54;
+            background-color: #EEEEEE;
+            text-align: center;
+        }
+
+
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        .custom-radio {
+            display: inline-block;
+            width: 20px;
+            height: 24px;
+            background-image: url('./quantum\ screen\ assets/icons/radio-button-off.svg');
+            /* Default image (unchecked) */
+            background-size: contain;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            transition: background-image 0.3s ease;
+            vertical-align: middle;
+            position: relative;
+            top: 0px;
+            /* tweak this value until it looks perfect */
+        }
+
+        /* When radio is selected (checked) */
+        input[type="radio"]:checked+.custom-radio {
+            background-image: url('./quantum\ screen\ assets/icons/radio-button-on.svg');
+            /* Change to checked image */
+        }
+
+        .content2 {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            height: 45px;
+            /* padding-top: 32px; */
+        }
+
+        .radioText {
+            font-size: 16px;
+            columns: #333333;
+        }
+
+        select {
+            border: none;
+            width: 100%;
+            border-bottom: 1px solid #808080;
+            background-color: transparent;
+            padding: 2px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .content4 {
+            padding-top: 12px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #1F7A54;
+        }
+
+        .content5 {
+            padding-top: 32px;
+            display: flex;
+            flex-direction: column;
+            height: 48px;
+        }
+
+        .userName {
+            border-right: none;
+            border-top: none;
+            border-left: none;
+            width: 99%;
+            border-bottom-width: 1px;
+        }
+
+        .forgot {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .content6 {
+            padding-top: 2px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .password {
+            border-left: none;
+            border-right: none;
+            border-top: none;
+            border-bottom-width: 1px;
+            width: 99%;
+        }
+
+        /* .forgot::placeholder {
+            font-size: 16px;
+        } */
+
+        .custom-checkbox {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .custom-checkbox input[type="checkbox"] {
+            display: none;
+            /* hide native checkbox */
+        }
+
+        .checkbox-icon {
+            width: 24px;
+            height: 24px;
+            background-image: url('./quantum\ screen\ assets/icons/checkbox-unchecked.svg');
+            background-size: cover;
+            margin-right: 10px;
+            transition: background-image 0.3s ease;
+        }
+
+        .custom-checkbox input:checked+.checkbox-icon {
+            background-image: url('./quantum\ screen\ assets/icons/checkbox-checked.svg');
+        }
+
+        .content8 {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            padding-top: 34px;
+        }
+
+        .logIn {
+            width: 215.51px;
+            /* Adjust width */
+            height: 40px;
+            /* Adjust height */
+            font-size: 14px;
+            /* Adjust font size */
+            background-color: #3FD28B;
+            /* Button background color */
+            color: #1F2834;
+            /* Text color */
+            border: none;
+            /* Remove border */
+            cursor: pointer;
+            /* Add pointer cursor on hover */
+            border-radius: 5px;
+            /* Optional: Rounded corners */
+
+            box-shadow: 0px 3px 5px #0000003D;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div><img src="./quantum screen assets\icons\logousedinheader.svg" alt="Loading"></div>
+    </header>
+    <main>
+        <form action="" class="mainForm">
+            <div class="loginForm">
+                <div class="content1">
+                    <div class="arrowIcon"><img src="./\quantum screen assets\icons\back.svg" alt=""></div>
+                    <div class="loginFormHeader">Log in with Quantum</div>
+                </div>
+                <div class="content2">
+                    <label>
+                        <input type="radio" name="schoolType" value="District">
+                        <span class="custom-radio"></span>
+                        <span class="radioText">District</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="schoolType" value="Independent School">
+                        <span class="custom-radio"></span>
+                        <span class="radioText">Independent School</span>
+                    </label>
+                </div>
+                <div class="content3">
+                    <label for="state" style="font-size: 12px;">State*</label><br>
+                    <select name="dropState" id="state">
+                        <option value="Alabama">Alabama</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="Scotland">Scotland</option>
+                    </select>
+                </div>
+                <div class="content4">
+                    <label for="district" style="font-size: 12px;">District*</label>
+                    <select name="myDistrict" id="district">
+                        <option value="Alabama State District">Alambama State District</option>
+                    </select>
+                </div>
+                <div class="content5">
+                    <input class="userName" type="text" placeholder="Username/Email ID*">
+
+                    <div class="forgot"><a href="https://abc.xyz">FORGOT USERNAME?</a></div>
+                </div>
+                <div class="content6">
+                    <input type="password" class="password" name="myPassword" placeholder="Password*">
+                    <div class="forgot"><a href="https://abc.password">FORGOT PASSWORD?</a></div>
+                </div>
+                <div class="content7">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="myCheckbox">
+                        <span class="checkbox-icon"></span>
+                        <span style="font-size: 16px; font-weight: bold;">Remember me</span>
+                    </label>
+                </div>
+                <div class="content8">
+                    <input type="submit" name="login" class="logIn" value="LOG IN">
+                </div>
+            </div>
+        </form>
+    </main>
+    <footer>
+        <div class="aboutContact">About | Contact Us</div>
+        <div class="lastFooter">
+            <div><img src="./\quantum screen assets\icons\logo used in footer.svg" alt="Loading"></div>
+            <div>&nbsp;|&nbsp;</div>
+            <div style="font-size: 15px; font-family: 'Quicksand'; color: #616161;"> Copyright
+                &copy; 2020-2021 &nbsp;<b>Zeus Systems Pvt. Ltd.</b>&nbsp; All righst reserved.</div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

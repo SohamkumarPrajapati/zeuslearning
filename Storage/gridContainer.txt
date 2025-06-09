@@ -1,0 +1,13 @@
+diaplay: grid
+grid-template-columns --> specify the grid size in column (ex:: 1fr 1fr 1fr or repeat(12, 1fr))
+grid-template-rows --> specify the grid size vertically
+
+column-gap --> gap btween columns
+row-gap --> gap between rows
+gap --> overall gap apply to both row and columns
+
+grid-column-start --> specify how many colums does your grid element occupy
+grid-column-end --> specify how many rows does your grid item occupy
+
+for grid items:-->
+justify-content
