@@ -91,6 +91,71 @@
             display: none;
         }
 
+        /* ...existing code... */
+        .mobileNavLinks {
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: 56px;
+            right: 20px;
+            width: 220px;
+            background: white;
+            z-index: 1000;
+            /* border-radius: 8px; */
+            /* border: 1px solid #222; */
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ...existing code... */
+
+        .mobileNavLinks .links {
+            padding: 16px;
+            /* border-bottom: 1px solid #222; */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #1F7A54;
+            cursor: pointer;
+            position: relative;
+            background: white;
+        }
+
+        .mobileNavLinks .links.active {
+            color: #1F7A54;
+            /* background: #3FD28B; */
+            /* Optional: add a green background for contrast */
+        }
+
+        .mobileNavLinks .v-icon {
+            margin-left: 8px;
+            transition: transform 0.2s;
+        }
+
+        .v-icon.rotate {
+            transform: rotate(180deg);
+        }
+
+        .mobileNavLinks .submenu {
+            background: white;
+            color: #1F7A54;
+            padding: 12px 16px 12px 32px;
+            font-size: 15px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            position: relative;
+            /* left: 12px; */
+            border-radius: 4px;
+        }
+
+        .mobileNavLinks .links a {
+            color: #3FD28B;
+            text-decoration: none;
+            font-family: 'Quicksand';
+            font-size: 16px;
+        }
+
+
         @media (max-width: 768px) {
             .navLinks {
                 display: none;
@@ -98,11 +163,34 @@
 
             .hamburger {
                 display: flex;
+                cursor: pointer;
+            }
+
+            .mobileNavLinks {
+                display: none;
+            }
+
+            .mobileNavLinks.active {
+                display: flex;
+                animation: slideDown 0.2s;
             }
 
             /* .navIcons {
                 justify-self: flex-end;
             } */
+        }
+
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .navLinks>div>a {
@@ -220,7 +308,7 @@
             gap: 16px;
             width: 500px;
             height: 248px;
-            padding: 24px;
+            padding: 16px;
         }
 
         .img1 {
@@ -312,6 +400,7 @@
             grid-row: 4/5;
             grid-column: 1/5;
             width: 100%;
+            padding-top: 6px;
             /* height: 100%; */
             display: flex;
             justify-content: space-around;
@@ -396,6 +485,7 @@
     </style>
 </head>
 
+
 <body>
     <header>
         <div class="logoImage">
@@ -412,10 +502,51 @@
             <div class="bell"><img src="quantum screen assets/icons/alerts.svg" alt=""></div>
             <div class="announcement"><img src="quantum screen assets/icons/announcements.svg" alt=""></div>
             <div class="profile"><img src="quantum screen assets/icons/account_circle.svg" alt=""></div>
-            <div class="hamburger">
+            <!-- ...existing code... -->
+            <!-- ...existing code... -->
+            <div class="hamburger" id="hamburger-menu">
+                <span class="selected-label" id="selected-label" style="display:none;">DASHBOARD</span>
                 <img src="quantum screen assets/icons/hamburger-menu.svg" alt="">
+                <!-- Removed the V-shaped arrow SVG here -->
+            </div>
+            <!-- ...existing code... -->
+        </div>
+
+        <!-- Mobile Dropdown Menu -->
+        <!-- ...existing code... -->
+        <div class="mobileNavLinks" id="mobileNavLinks">
+            <div class="links" data-menu="dashboard">
+                <span>DASHBOARD</span>
+                <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="none" stroke="#3FD28B" stroke-width="2" d="M7 10l5 5 5-5" />
+                </svg>
+            </div>
+            <div class="links" data-menu="content">
+                <span>CONTENT</span>
+                <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="none" stroke="#3FD28B" stroke-width="2" d="M7 10l5 5 5-5" />
+                </svg>
+            </div>
+            <div class="links" data-menu="users">
+                <span>USERS</span>
+                <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="none" stroke="#3FD28B" stroke-width="2" d="M7 10l5 5 5-5" />
+                </svg>
+            </div>
+            <div class="links" data-menu="reports">
+                <span>REPORTS</span>
+                <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="none" stroke="#3FD28B" stroke-width="2" d="M7 10l5 5 5-5" />
+                </svg>
+            </div>
+            <div class="links" data-menu="admin">
+                <span>ADMIN</span>
+                <svg class="v-icon" width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="none" stroke="#3FD28B" stroke-width="2" d="M7 10l5 5 5-5" />
+                </svg>
             </div>
         </div>
+        <!-- ...existing code... -->
 
 
     </header>
@@ -643,14 +774,89 @@
 
     <script>
         // Select the star image
-        const starIcon = document.querySelector('.star img');
+        const starIcons = document.querySelectorAll('.star img');
 
-        // Add a click event listener
-        starIcon.addEventListener('click', () => {
-            // Toggle the faded class on each click
-            starIcon.classList.toggle('faded');
+        // Add a click event listener to each star icon
+        starIcons.forEach(starIcon => {
+            starIcon.addEventListener('click', () => {
+                // Toggle the faded class on each click
+                starIcon.classList.toggle('faded');
+            });
         });
     </script>
+
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobileNavLinks');
+        let openSubmenu = null;
+        let openIcon = null;
+
+        // Toggle menu
+        hamburger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            mobileMenu.classList.toggle('active');
+            hamburger.classList.toggle('open');
+            if (openSubmenu) {
+                openSubmenu.remove();
+                openSubmenu = null;
+            }
+            if (openIcon) {
+                openIcon.classList.remove('rotate');
+                openIcon = null;
+            }
+        });
+
+        // Hide menu when clicking outside
+        document.addEventListener('click', function (event) {
+            if (!mobileMenu.contains(event.target) && !hamburger.contains(event.target)) {
+                mobileMenu.classList.remove('active');
+                hamburger.classList.remove('open');
+                if (openSubmenu) {
+                    openSubmenu.remove();
+                    openSubmenu = null;
+                }
+                if (openIcon) {
+                    openIcon.classList.remove('rotate');
+                    openIcon = null;
+                }
+            }
+        });
+
+        // Only open submenu on v-icon click
+        mobileMenu.querySelectorAll('.v-icon').forEach(icon => {
+    icon.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const linkDiv = icon.closest('.links');
+        // If submenu is already open for this link, close it
+        if (openSubmenu && openSubmenu.previousSibling === linkDiv) {
+            openSubmenu.remove();
+            openSubmenu = null;
+            icon.classList.remove('rotate');
+            linkDiv.classList.remove('active');
+            openIcon = null;
+            return;
+        }
+        // Remove existing submenu and reset icon and active class
+        if (openSubmenu) {
+            openSubmenu.remove();
+            if (openIcon) openIcon.classList.remove('rotate');
+            document.querySelectorAll('.mobileNavLinks .links.active').forEach(l => l.classList.remove('active'));
+            openSubmenu = null;
+            openIcon = null;
+        }
+        // Create and show submenu
+        const submenu = document.createElement('div');
+        submenu.className = 'submenu';
+        submenu.textContent = 'COURSE CATALOG'; // Replace with actual submenu content
+        linkDiv.insertAdjacentElement('afterend', submenu);
+        icon.classList.add('rotate');
+        linkDiv.classList.add('active');
+        openSubmenu = submenu;
+        openIcon = icon;
+    });
+});
+    </script>
+
 
 
 
