@@ -26,6 +26,7 @@
             overflow: auto;
             margin: 0;
             padding: 0;
+            background-color: #EEEEEE;
         }
 
         header {
@@ -37,10 +38,6 @@
             justify-content: space-between;
             align-items: center;
             gap: 3vw;
-        }
-
-        main {
-            background-color: #eeeeee;
         }
 
         .navLinks {
@@ -55,7 +52,7 @@
         .navLinks>div {
             display: flex;
             align-items: center;
-            font-size: 18px;
+            font-size: 14px;
 
         }
 
@@ -199,56 +196,30 @@
 
         .content3 {
             padding-top: 16px;
-            display: grid;
+            display: flex;
+            flex-wrap: wrap;
             width: 97%;
-            height: 850px;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
             column-gap: 24px;
             row-gap: 25px;
             background-color: #eeeeee;
-            align-self: center;
             margin-bottom: 3%;
+            justify-content: space-evenly;
+            max-width: 1400px;
+            align-self: center;
         }
-        
+
 
         .content3>div {
             background-color: white;
         }
 
         .content31 {
-            grid-column: 1/2;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr 1fr;
             gap: 16px;
-            padding: 24px;
-        }
-
-        .content32 {
-            grid-column: 2/3;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr 1fr;
-            gap: 16px;
-            padding: 24px;
-        }
-
-        .content33 {
-            grid-column: 1/2;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr 1fr;
-            gap: 16px;
-            padding: 24px;
-        }
-
-        .content34 {
-            grid-column: 2/3;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr 1fr;
-            gap: 16px;
+            width: 500px;
+            height: 248px;
             padding: 24px;
         }
 
@@ -287,22 +258,23 @@
         .data1 {
             grid-column: 2/5;
             width: 100%;
-            height: 20px;
             display: flex;
             justify-content: space-between;
         }
 
         .data2 {
             grid-column: 2/4;
-            font-size: 16px;
+            font-size: 12px;
         }
 
         .data3 {
-            grid-row: 3/4;
+            grid-row: 2/4;
             grid-column: 2/5;
             display: flex;
+            align-self: center;
             flex-direction: column;
             justify-content: space-between;
+            padding-bottom: 10px;
         }
 
         .frankClass {
@@ -312,7 +284,7 @@
             outline: none;
             border-bottom: 2px solid rgb(214, 214, 214);
             width: 92%;
-            font-size: 23px;
+            font-size: 16px;
             font-weight: 600;
         }
 
@@ -323,26 +295,25 @@
             outline: none;
             border-bottom: 2px solid rgb(214, 214, 214);
             width: 92%;
-            font-size: 23px;
+            font-size: 16px;
             font-weight: 600;
             opacity: 0.5;
         }
 
         .data32 {
-            font-size: 16px;
-            width: 52%;
+            font-size: 12px;
+            width: 100%;
             display: flex;
             flex: 1;
-            justify-content: space-between;
+            justify-content: flex-start;
         }
 
         .bottomIcons {
             grid-row: 4/5;
             grid-column: 1/5;
             width: 100%;
-            height: 100%;
+            /* height: 100%; */
             display: flex;
-            flex: 1;
             justify-content: space-around;
             align-items: center;
             border-top: 2px solid rgb(214, 214, 214);
@@ -455,14 +426,14 @@
                     <img src="quantum screen assets/icons/courses.svg" alt="Loading">
                 </div>
                 <div style="font-size: 24px; font-weight: bold;">4</div>
-                <div style="font-size: 16px;">Courses</div>
+                <div style="font-size: 16px; font-weight: bold;">Courses</div>
             </div>
             <div class="content12">
                 <div>
                     <img src="quantum screen assets/icons/classes.svg" alt="Loading">
                 </div>
                 <div style="font-size: 24px; font-weight: bold;">4</div>
-                <div style="font-size: 16px;">Classes</div>
+                <div style="font-size: 16px; font-weight: bold;">Classes</div>
             </div>
         </div>
         <div class="content2">
@@ -481,12 +452,12 @@
             <div class="content31">
                 <div class="img1"></div>
                 <div class="data1">
-                    <div style="font-size: 23px; font-weight: 600;">Acceleration</div>
+                    <div class="data2">
+                        <div style="font-size: 16px; font-weight: 600;">Acceleration</div>
+                        <div>Physics | Grade 7 <span style="color: green;">+2</span></div>
+                        <div><b>4</b> Units <b>18</b> Lessons <b>24</b>Topics</div>
+                    </div>
                     <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
-                </div>
-                <div class="data2">
-                    <div>Physics | Grade 7 <span style="color: green;">+2</span></div>
-                    <div><b>4</b> Units <b>18</b> Lessons <b>24</b>Topics</div>
                 </div>
                 <div class="data3">
                     <div class="data31">
@@ -495,7 +466,8 @@
                         </select>
                     </div>
                     <div class="data32">
-                        <div>50 Students</div> | <div>21-Jan-2020 - 21-Aug-2020</div>
+                        <div style="margin-right: 10px;">50 Students</div> | <div style="margin-left: 10px;">21-Jan-2020
+                            - 21-Aug-2020</div>
                     </div>
                 </div>
                 <div class="bottomIcons">
@@ -505,16 +477,16 @@
                     <div class="bIcons"><img src="quantum screen assets/icons/reports.svg" alt=""></div>
                 </div>
             </div>
-            <div class="content32">
+            <div class="content31">
 
                 <div class="img2"></div>
                 <div class="data1">
-                    <div style="font-size: 23px; font-weight: 600;">Displacement, Velocity and <br> Speed</div>
+                    <div class="data2">
+                        <div style="font-size: 16px; font-weight: 600;">Displacement, Velocity and <br> Speed</div>
+                        <div>Physics | Grade 6 <span style="color: green;">+3</span></div>
+                        <div><b>2</b> Units <b>15</b> Lessons <b>20</b>Topics</div>
+                    </div>
                     <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
-                </div>
-                <div class="data2">
-                    <div>Physics | Grade 6 <span style="color: green;">+3</span></div>
-                    <div><b>2</b> Units <b>15</b> Lessons <b>20</b>Topics</div>
                 </div>
                 <div class="data3">
                     <div class="data31">
@@ -533,16 +505,17 @@
 
 
             </div>
-            <div class="content33">
+            <div class="content31">
                 <div class="img3"></div>
                 <div class="data1">
-                    <div style="font-size: 23px; font-weight: 600;">Introduction to Biology: Micro <br> organisms and
-                        how they affec...</div>
+                    <div class="data2">
+                        <div style="font-size: 16px; font-weight: 600;">Introduction to Biology: Micro <br> organisms
+                            and
+                            how they affec...</div>
+                        <div>Biology | Grade 4 <span style="color: green;">+1</span></div>
+                        <div><b>5</b> Units <b>16</b> Lessons <b>22</b>Topics</div>
+                    </div>
                     <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
-                </div>
-                <div class="data2">
-                    <div>Biology | Grade 4 <span style="color: green;">+1</span></div>
-                    <div><b>5</b> Units <b>16</b> Lessons <b>22</b>Topics</div>
                 </div>
                 <div class="data3">
                     <div class="data31">
@@ -562,15 +535,16 @@
                     <div class="bIcons"><img src="quantum screen assets/icons/reports.svg" alt=""></div>
                 </div>
             </div>
-            <div class="content34">
+            <div class="content31">
                 <div class="img4"></div>
                 <div class="data1">
-                    <div style="font-size: 23px; font-weight: 600;">Introduction to Highschool <br> Mathematics</div>
+                    <div class="data2">
+                        <div style="font-size: 16px; font-weight: 600;">Introduction to Highschool <br> Mathematics
+                        </div>
+                        <div>Mathematics | Grade 8 <span style="color: green;">+3</span></div>
+                        <div><b>4</b> Units <b>18</b> Lessons <b>24</b>Topics</div>
+                    </div>
                     <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
-                </div>
-                <div class="data2">
-                    <div>Mathematics | Grade 8 <span style="color: green;">+3</span></div>
-                    <div><b>4</b> Units <b>18</b> Lessons <b>24</b>Topics</div>
                 </div>
                 <div class="data3">
                     <div class="data31">
@@ -593,7 +567,7 @@
     </main>
 
     <footer>
-       
+
         <div class="footer-1">
             About | Contact
         </div>
@@ -601,7 +575,7 @@
             <div class="footer-2-logo">
 
             </div>
-            | 
+            |
             <div class="footer-2-text">
                 Copyright &copy; 2020-2021 <b>Zeus System Pvt. Ltd.</b> All rights reserved.
             </div>
