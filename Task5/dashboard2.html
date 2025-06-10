@@ -49,6 +49,14 @@
             margin-left: auto;
             gap: 3vw;
             flex-shrink: 2;
+            height: 100%;
+        }
+
+        .navLinks>div {
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+
         }
 
         .navIcons {
@@ -171,7 +179,7 @@
             margin-left: auto;
         }
 
-        select {
+        .courseNameDropDown {
             border-top: none;
             border-left: none;
             border-right: none;
@@ -193,21 +201,50 @@
             padding-top: 16px;
             display: grid;
             width: 97%;
-            height: 740px;
+            height: 850px;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
             column-gap: 24px;
             row-gap: 25px;
             background-color: #eeeeee;
             align-self: center;
+            margin-bottom: 3%;
         }
+        
 
-        .content3 > div {
+        .content3>div {
             background-color: white;
         }
 
         .content31 {
             grid-column: 1/2;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .content32 {
+            grid-column: 2/3;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .content33 {
+            grid-column: 1/2;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .content34 {
+            grid-column: 2/3;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr 1fr;
@@ -223,12 +260,167 @@
             background-size: cover;
         }
 
+        .img2 {
+            grid-column: 1/2;
+            grid-row: 1/4;
+            background-color: skyblue;
+            background-image: url('quantum screen assets/images/imageMask-1.png');
+            background-size: cover;
+        }
+
+        .img3 {
+            grid-column: 1/2;
+            grid-row: 1/4;
+            background-color: skyblue;
+            background-image: url('quantum screen assets/images/imageMask-3.png');
+            background-size: cover;
+        }
+
+        .img4 {
+            grid-column: 1/2;
+            grid-row: 1/4;
+            background-color: skyblue;
+            background-image: url('quantum screen assets/images/imageMask-3.svg');
+            background-size: cover;
+        }
+
         .data1 {
             grid-column: 2/5;
             width: 100%;
             height: 20px;
             display: flex;
             justify-content: space-between;
+        }
+
+        .data2 {
+            grid-column: 2/4;
+            font-size: 16px;
+        }
+
+        .data3 {
+            grid-row: 3/4;
+            grid-column: 2/5;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .frankClass {
+            border-left: none;
+            border-right: none;
+            border-top: none;
+            outline: none;
+            border-bottom: 2px solid rgb(214, 214, 214);
+            width: 92%;
+            font-size: 23px;
+            font-weight: 600;
+        }
+
+        .noclasses {
+            border-left: none;
+            border-right: none;
+            border-top: none;
+            outline: none;
+            border-bottom: 2px solid rgb(214, 214, 214);
+            width: 92%;
+            font-size: 23px;
+            font-weight: 600;
+            opacity: 0.5;
+        }
+
+        .data32 {
+            font-size: 16px;
+            width: 52%;
+            display: flex;
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .bottomIcons {
+            grid-row: 4/5;
+            grid-column: 1/5;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex: 1;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 2px solid rgb(214, 214, 214);
+        }
+
+        .bottomIcons>div {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bIcons img {
+            transition: opacity 0.5s ease;
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .bIcons img.faded {
+            opacity: 0.5;
+        }
+
+        .star img {
+            width: 30px;
+            /* Initial width */
+            height: auto;
+            cursor: pointer;
+            /* Make it clickable */
+            transition: opacity 0.5s ease;
+            opacity: 1;
+            /* Initially fully visible */
+        }
+
+        .star img.faded {
+            opacity: 0.3;
+            /* Faded state */
+        }
+
+        footer {
+            background-color: #EEEEEE;
+            text-align: center;
+            height: 74px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .footer-1 {
+            font-weight: 500;
+            font-size: 20px;
+            display: flex;
+            height: 34px;
+            color: #1F7A54;
+            /* background-color: rebeccapurple; */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer-2 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            color: gray;
+            background-color: #E0E1E1;
+        }
+
+        .footer-2-text {
+            padding-left: 5px;
+        }
+
+        .footer-2-logo {
+            background-image: url('quantum screen assets/icons/logo used in footer.svg');
+            background-repeat: no-repeat;
+            height: 30px;
+            width: 100px;
+            background-size: contain;
         }
     </style>
 </head>
@@ -239,11 +431,11 @@
             <img src="quantum screen assets\icons\logousedinheader.svg" alt="Loading..">
         </div>
         <div class="navLinks">
-            <div class="dashLink"><a href="dash">DASHBOARD</a></div>
-            <div class="content"><a href="cont">CONTENT</a></div>
-            <div class="users"><a href="abc.xyz">USERS</a></div>
-            <div class="reports"><a href="report">REPORTS</a></div>
-            <div class="admin"><a href="admin">ADMIN</a></div>
+            <div class="links"><a href="">DASHBOARD</a></div>
+            <div class="links"><a href="">CONTENT</a></div>
+            <div class="links"><a href="">USERS</a></div>
+            <div class="links"><a href="">REPORTS</a></div>
+            <div class="links"><a href="">ADMIN</a></div>
         </div>
         <div class="navIcons">
             <div class="bell"><img src="quantum screen assets/icons/alerts.svg" alt=""></div>
@@ -289,21 +481,207 @@
             <div class="content31">
                 <div class="img1"></div>
                 <div class="data1">
-                    <div style="font-size: 16px; font-weight: 600;">Acceleration</div>
+                    <div style="font-size: 23px; font-weight: 600;">Acceleration</div>
                     <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
                 </div>
                 <div class="data2">
-                    <div>Physics | Grade & 7 <span style="color: green;">+2</span></div>
+                    <div>Physics | Grade 7 <span style="color: green;">+2</span></div>
                     <div><b>4</b> Units <b>18</b> Lessons <b>24</b>Topics</div>
                 </div>
-                <div class="bottomIcons"></div>
+                <div class="data3">
+                    <div class="data31">
+                        <select name="frankClass" class="frankClass">
+                            <option value="Mr. Frank's Class B">Mr. Frank's Class B</option>
+                        </select>
+                    </div>
+                    <div class="data32">
+                        <div>50 Students</div> | <div>21-Jan-2020 - 21-Aug-2020</div>
+                    </div>
+                </div>
+                <div class="bottomIcons">
+                    <div class="bIcons"><img src="quantum screen assets/icons/preview.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/manage course.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/grade submissions.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/reports.svg" alt=""></div>
+                </div>
             </div>
-            <div class="content32"></div>
-            <div class="content33"></div>
-            <div class="content34"></div>
+            <div class="content32">
+
+                <div class="img2"></div>
+                <div class="data1">
+                    <div style="font-size: 23px; font-weight: 600;">Displacement, Velocity and <br> Speed</div>
+                    <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
+                </div>
+                <div class="data2">
+                    <div>Physics | Grade 6 <span style="color: green;">+3</span></div>
+                    <div><b>2</b> Units <b>15</b> Lessons <b>20</b>Topics</div>
+                </div>
+                <div class="data3">
+                    <div class="data31">
+                        <select name="noclasses" class="noclasses">
+                            <option value="noclasses">No Classes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bottomIcons">
+                    <div class="bIcons"><img src="quantum screen assets/icons/preview.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/manage course.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/grade submissions.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/reports.svg" alt=""></div>
+                </div>
+
+
+
+            </div>
+            <div class="content33">
+                <div class="img3"></div>
+                <div class="data1">
+                    <div style="font-size: 23px; font-weight: 600;">Introduction to Biology: Micro <br> organisms and
+                        how they affec...</div>
+                    <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
+                </div>
+                <div class="data2">
+                    <div>Biology | Grade 4 <span style="color: green;">+1</span></div>
+                    <div><b>5</b> Units <b>16</b> Lessons <b>22</b>Topics</div>
+                </div>
+                <div class="data3">
+                    <div class="data31">
+                        <select name="frankClass" class="frankClass">
+                            <option value="Mr. Frank's Class B">All Classes</option>
+                        </select>
+                    </div>
+                    <div class="data32">
+                        <div>300 Students</div>
+                        <div></div>
+                    </div>
+                </div>
+                <div class="bottomIcons">
+                    <div class="bIcons"><img src="quantum screen assets/icons/preview.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/manage course.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/grade submissions.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/reports.svg" alt=""></div>
+                </div>
+            </div>
+            <div class="content34">
+                <div class="img4"></div>
+                <div class="data1">
+                    <div style="font-size: 23px; font-weight: 600;">Introduction to Highschool <br> Mathematics</div>
+                    <div class="star"><img src="quantum screen assets/icons/favourite.svg" alt=""></div>
+                </div>
+                <div class="data2">
+                    <div>Mathematics | Grade 8 <span style="color: green;">+3</span></div>
+                    <div><b>4</b> Units <b>18</b> Lessons <b>24</b>Topics</div>
+                </div>
+                <div class="data3">
+                    <div class="data31">
+                        <select name="frankClass" class="frankClass">
+                            <option value="Mr. Frank's Class B">Mr. Frank's Class A</option>
+                        </select>
+                    </div>
+                    <div class="data32">
+                        <div>44 Students</div> | <div>14-Oct-2019 - 20-Oct-2020</div>
+                    </div>
+                </div>
+                <div class="bottomIcons">
+                    <div class="bIcons"><img src="quantum screen assets/icons/preview.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/manage course.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/grade submissions.svg" alt=""></div>
+                    <div class="bIcons"><img src="quantum screen assets/icons/reports.svg" alt=""></div>
+                </div>
+            </div>
         </div>
     </main>
-    <footer></footer>
+
+    <footer>
+       
+        <div class="footer-1">
+            About | Contact
+        </div>
+        <div class="footer-2">
+            <div class="footer-2-logo">
+
+            </div>
+            | 
+            <div class="footer-2-text">
+                Copyright &copy; 2020-2021 <b>Zeus System Pvt. Ltd.</b> All rights reserved.
+            </div>
+
+        </div>
+    </footer>
+
+
+
+
+    <script>
+        const content11 = document.querySelector('.content11');
+        const content12 = document.querySelector('.content12');
+
+        content11.addEventListener('click', () => {
+            content11.style.borderBottom = '5px solid black';
+            content12.style.borderBottom = 'none';
+        });
+
+        content12.addEventListener('click', () => {
+            content12.style.borderBottom = '5px solid black';
+            content11.style.borderBottom = 'none';
+        });
+    </script>
+
+
+    <script>
+        const navItems = document.querySelectorAll('.navLinks > div');
+
+        // Set default active (Dashboard)
+        navItems.forEach(i => {
+            i.style.borderBottom = '5px solid transparent';
+            i.querySelector('a').style.color = '#3FD28B';
+        });
+        if (navItems.length > 0) {
+            navItems[0].style.borderBottom = '5px solid white';
+            navItems[0].querySelector('a').style.color = 'white';
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Prevent default link behavior (for testing)
+                e.preventDefault();
+
+                navItems.forEach(i => {
+                    i.style.borderBottom = '5px solid transparent';
+                    i.querySelector('a').style.color = '#3FD28B';
+                }); item.style.borderBottom = '5px solid white';
+                item.querySelector('a').style.color = 'white';
+
+            });
+        });
+    </script>
+
+
+    <script>
+        const icons = document.querySelectorAll('.bIcons img');
+
+        icons.forEach(icon => {
+            icon.addEventListener('click', () => {
+                icon.classList.toggle('faded');
+            });
+        });
+    </script>
+
+    <script>
+        // Select the star image
+        const starIcon = document.querySelector('.star img');
+
+        // Add a click event listener
+        starIcon.addEventListener('click', () => {
+            // Toggle the faded class on each click
+            starIcon.classList.toggle('faded');
+        });
+    </script>
+
+
+
+
+
 
 </body>
 
