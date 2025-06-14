@@ -370,6 +370,7 @@ main {
     width: 92%;
     font-size: 16px;
     font-weight: 600;
+    background-color: transparent;
 }
 
 .noclasses {
