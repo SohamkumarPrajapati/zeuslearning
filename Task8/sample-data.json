@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "firstName": "Raj",
+        "lastName": "Solanki",
+        "age": 30,
+        "salary": 1000000
+    },
+    {
+        "id": 2,
+        "firstName": "Priya",
+        "lastName": "Sharma",
+        "age": 28,
+        "salary": 750000
+    },
+    {
+        "id": 3,
+        "firstName": "Amit",
+        "lastName": "Patel",
+        "age": 35,
+        "salary": 1200000
+    }
+]
