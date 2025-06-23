@@ -1,7 +1,7 @@
 
         .toolbar {
             padding: 15px;
-            background: #418d45;
+            background: #f5f5f5;
             color: white;
             display: flex;
             gap: 10px;
@@ -30,7 +30,7 @@
         .stats {
             margin-left: auto;
             font-size: 14px;
-            color: #ecf0f1;
+            color: #000000;
         }
 
         .canvas-container {
@@ -38,7 +38,7 @@
             overflow: hidden;
             height: calc(100vh - 80px);
             /* Subtract toolbar height */
-            width: 100%;
+            width: 100vw;
         }
 
         #gridCanvas {

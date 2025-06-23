@@ -363,7 +363,7 @@ class ExcelGrid {
         this.scrollX = 0;
         this.scrollY = 0;
         this.maxRows = 100000;
-        this.maxCols = 500;
+        this.maxCols = 3000;
 
         // Initialize columns
         for (let i = 0; i < this.maxCols; i++) {
@@ -393,8 +393,10 @@ class ExcelGrid {
 
     initializeCanvas() {
         const container = this.canvas.parentElement;
-        this.canvas.width = container.clientWidth;
-        this.canvas.height = container.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        this.canvas.width = container.clientWidth * dpr;
+        this.canvas.height = container.clientHeight * dpr;
+        this.ctx.scale(dpr, dpr);
     }
 
     setupKeyboardListeners() {
@@ -542,8 +544,8 @@ class ExcelGrid {
         this.ctx.fillRect(0, 0, this.canvas.width, this.colHeaderHeight);
         this.ctx.fillRect(0, 0, this.rowHeaderWidth, this.canvas.height);
 
-        this.ctx.strokeStyle = '#bdc3c7';
-        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = '#bdbdbd';
+        this.ctx.lineWidth = 0.15;
 
         // Column headers
         let x = this.rowHeaderWidth - this.scrollX;
@@ -558,7 +560,7 @@ class ExcelGrid {
                 this.ctx.strokeRect(x, 0, width, this.colHeaderHeight);
 
                 this.ctx.fillStyle = '#2c3e50';
-                this.ctx.font = '12px Arial';
+                this.ctx.font = '18px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.fillText(column ? column.name : '', x + width / 2, 20);
             }
@@ -573,13 +575,13 @@ class ExcelGrid {
             const height = row ? row.height : 25;
 
             if (y + height > this.colHeaderHeight) {
-                this.ctx.fillStyle = row && row.selected ? '#3498db' : '#ecf0f1';
+                this.ctx.fillStyle = row && row.selected ? '#3498db' : '#f5f5f5';
                 this.ctx.fillRect(0, y, this.rowHeaderWidth, height);
 
                 this.ctx.strokeRect(0, y, this.rowHeaderWidth, height);
 
                 this.ctx.fillStyle = '#2c3e50';
-                this.ctx.font = '12px Arial';
+                this.ctx.font = '15px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.fillText((i + 1).toString(), this.rowHeaderWidth / 2, y + height / 2 + 4);
             }
@@ -589,8 +591,8 @@ class ExcelGrid {
     }
 
     drawCells() {
-        this.ctx.strokeStyle = '#e8e8e8';
-        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = '#bdbdbd';
+        this.ctx.lineWidth = 0.15;
 
         const startCol = Math.max(0, Math.floor(this.scrollX / 100));
         const startRow = Math.max(0, Math.floor(this.scrollY / 25));
@@ -636,8 +638,8 @@ class ExcelGrid {
     drawSelection() {
         if (this.selection.type === 'none') return;
 
-        this.ctx.strokeStyle = '#2980b9';
-        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = '#107c41';
+        this.ctx.lineWidth = 1.5;
         this.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
 
         const startX = this.getColumnPosition(this.selection.startCol);
@@ -1053,6 +1055,7 @@ window.addEventListener('resize', () => {
     grid.initializeCanvas();
     grid.render();
 });
+
 
 // Initial setup
 commandManager.updateButtons();
