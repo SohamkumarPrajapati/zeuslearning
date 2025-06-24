@@ -699,7 +699,7 @@ class ExcelGrid {
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-        this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
+        this.canvas.addEventListener('click', (e) => this.handleClick(e));
         this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
 
         document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -817,7 +817,7 @@ class ExcelGrid {
         this.updateCursor(x, y);
     }
 
-    handleDoubleClick(e) {
+    handleClick(e) {
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
