@@ -223,7 +223,7 @@ class Selection {
      */
     contains(row, col) {
         return row >= this.startRow && row <= this.endRow &&
-               col >= this.startCol && col <= this.endCol;
+            col >= this.startCol && col <= this.endCol;
     }
 
     /**
@@ -236,7 +236,7 @@ class Selection {
         for (let r = this.startRow; r <= this.endRow; r++) {
             for (let c = this.startCol; c <= this.endCol; c++) {
                 if (grid.isValidCell(r, c)) {
-                    cells.push({row: r, col: c, value: grid.getCellValue(r, c)});
+                    cells.push({ row: r, col: c, value: grid.getCellValue(r, c) });
                 }
             }
         }
@@ -403,7 +403,7 @@ class ExcelGrid {
         window.addEventListener('keydown', (e) => {
             if (this.editingCell) return; // Don't scroll while editing
 
-            const scrollSpeed = 25;
+            const scrollSpeed = 50;
             let shouldRender = false;
 
             switch (e.key) {
@@ -530,14 +530,105 @@ class ExcelGrid {
     }
 
     render() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw grid
-        this.drawHeaders();
-        this.drawCells();
-        this.drawSelection();
-        this.updateStats();
+    this.ctx.strokeStyle = '#bdbdbd';
+    this.ctx.lineWidth = 0.3;
+    this.ctx.textBaseline = 'middle';
+
+    const defaultRowHeight = 25;
+    const defaultColWidth = 100;
+
+    const startCol = Math.max(0, Math.floor(this.scrollX / defaultColWidth));
+    const startRow = Math.max(0, Math.floor(this.scrollY / defaultRowHeight));
+
+    let y = -this.scrollY;
+
+    for (let i = -1; i < this.maxRows && y < this.canvas.height; i++) {
+        const row = i >= 0 ? this.rows.get(i) : null;
+        const height = i === -1 ? this.colHeaderHeight : (row?.height || defaultRowHeight);
+
+        let x = -this.scrollX;
+
+        for (let j = -1; j < this.maxCols && x < this.canvas.width; j++) {
+            const col = j >= 0 ? this.getColumn(j) : null;
+            const width = j === -1 ? this.rowHeaderWidth : (col?.width || defaultColWidth);
+
+            if (x + width > 0 && y + height > 0) {
+                if (i === -1 && j === -1) {
+                    // Top-left corner
+                    this.ctx.fillStyle = '#e0e0e0';
+                    this.ctx.fillRect(x, y, width, height);
+                } else if (i === -1) {
+                    // Column header
+                    this.ctx.fillStyle = col?.selected ? '#3498db' : '#ecf0f1';
+                    this.ctx.fillRect(x, y, width, height);
+
+                    // Borders
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, y);                   // Top
+                    this.ctx.lineTo(x + width, y);
+                    this.ctx.moveTo(x + width, y);           // Right
+                    this.ctx.lineTo(x + width, y + height);
+                    this.ctx.stroke();
+
+                    // Text
+                    this.ctx.fillStyle = '#616161';
+                    this.ctx.font = '18px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(col?.name || '', x + width / 2, y + height / 2);
+                } else if (j === -1) {
+                    // Row header
+                    this.ctx.fillStyle = row?.selected ? '#3498db' : '#f5f5f5';
+                    this.ctx.fillRect(x, y, width, height);
+
+                    // Borders
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, y);                  // Left
+                    this.ctx.lineTo(x, y + height);
+                    this.ctx.moveTo(x, y + height);         // Bottom
+                    this.ctx.lineTo(x + width, y + height);
+                    this.ctx.stroke();
+
+                    // Text
+                    this.ctx.fillStyle = '#2c3e50';
+                    this.ctx.font = '15px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText((i + 1).toString(), x + width / 2, y + height / 2);
+                } else {
+                    // Main cell
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.fillRect(x, y, width, height);
+
+                    // Borders
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, y);                   // Top
+                    this.ctx.lineTo(x + width, y);
+                    this.ctx.moveTo(x + width, y);           // Right
+                    this.ctx.lineTo(x + width, y + height);
+                    this.ctx.stroke();
+
+                    // Cell content
+                    const value = this.getCellValue(i, j);
+                    if (value) {
+                        this.ctx.fillStyle = '#2c3e50';
+                        this.ctx.font = '14px Arial';
+                        this.ctx.textAlign = 'left';
+                        this.ctx.fillText(value.toString().substring(0, 15), x + 5, y + height / 2);
+                    }
+                }
+            }
+
+            x += width;
+        }
+
+        y += height;
     }
+
+    this.drawSelection();
+    this.updateStats();
+}
+
 
     drawHeaders() {
         this.ctx.fillStyle = '#ecf0f1';
@@ -545,7 +636,7 @@ class ExcelGrid {
         this.ctx.fillRect(0, 0, this.rowHeaderWidth, this.canvas.height);
 
         this.ctx.strokeStyle = '#bdbdbd';
-        this.ctx.lineWidth = 0.15;
+        this.ctx.lineWidth = 0.3;
 
         // Column headers
         let x = this.rowHeaderWidth - this.scrollX;
@@ -557,9 +648,16 @@ class ExcelGrid {
                 this.ctx.fillStyle = column && column.selected ? '#3498db' : '#ecf0f1';
                 this.ctx.fillRect(x, 0, width, this.colHeaderHeight);
 
-                this.ctx.strokeRect(x, 0, width, this.colHeaderHeight);
+                this.ctx.beginPath();
+                // Top border
+                this.ctx.moveTo(x, 0);
+                this.ctx.lineTo(x + width, 0);
+                // Right border
+                this.ctx.moveTo(x + width, 0);
+                this.ctx.lineTo(x + width, this.colHeaderHeight);
+                this.ctx.stroke();
 
-                this.ctx.fillStyle = '#2c3e50';
+                this.ctx.fillStyle = '#616161';
                 this.ctx.font = '18px Arial';
                 this.ctx.textAlign = 'center';
                 this.ctx.fillText(column ? column.name : '', x + width / 2, 20);
@@ -578,7 +676,15 @@ class ExcelGrid {
                 this.ctx.fillStyle = row && row.selected ? '#3498db' : '#f5f5f5';
                 this.ctx.fillRect(0, y, this.rowHeaderWidth, height);
 
-                this.ctx.strokeRect(0, y, this.rowHeaderWidth, height);
+                this.ctx.beginPath();
+                // Left border
+                this.ctx.moveTo(0, y);
+                this.ctx.lineTo(0, y + height);
+                // Bottom border
+                this.ctx.moveTo(0, y + height);
+                this.ctx.lineTo(this.rowHeaderWidth, y + height);
+                this.ctx.stroke();
+
 
                 this.ctx.fillStyle = '#2c3e50';
                 this.ctx.font = '15px Arial';
@@ -592,7 +698,7 @@ class ExcelGrid {
 
     drawCells() {
         this.ctx.strokeStyle = '#bdbdbd';
-        this.ctx.lineWidth = 0.15;
+        this.ctx.lineWidth = 0.3;
 
         const startCol = Math.max(0, Math.floor(this.scrollX / 100));
         const startRow = Math.max(0, Math.floor(this.scrollY / 25));
@@ -614,8 +720,17 @@ class ExcelGrid {
                         this.ctx.fillStyle = '#ffffff';
                         this.ctx.fillRect(x, y, width, height);
 
-                        // Draw cell border
-                        this.ctx.strokeRect(x, y, width, height);
+                        this.ctx.beginPath();
+
+                        // Top border
+                        this.ctx.moveTo(x, y);
+                        this.ctx.lineTo(x + width, y);
+
+                        // Right border
+                        this.ctx.moveTo(x + width, y);
+                        this.ctx.lineTo(x + width, y + height);
+
+                        this.ctx.stroke();
 
                         // Draw cell content
                         const value = this.getCellValue(i, j);
