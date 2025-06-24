@@ -8,6 +8,8 @@ const DEFAULT_COLUMN_WIDTH = 100;
 /** @constant {number} MAX_ROWS - Maximum number of rows in the grid */
 const MAX_ROWS = 100000;
 
+const MAX_COLS = 5000;
+
 
 /**
  * Represents a single cell in the Excel grid
@@ -403,6 +405,20 @@ class ExcelGrid {
         window.addEventListener('keydown', (e) => {
             if (this.editingCell) return; // Don't scroll while editing
 
+            const isCtrl = e.ctrlKey || e.metaKey;
+            const isShift = e.shiftKey;
+
+            // === Undo/Redo ===
+            if (isCtrl && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                if (isShift) {
+                    commandManager.redo();
+                } else {
+                    commandManager.undo();
+                }
+                return;
+            }
+
             const scrollSpeed = 50;
             let shouldRender = false;
 
@@ -530,224 +546,103 @@ class ExcelGrid {
     }
 
     render() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.ctx.strokeStyle = '#bdbdbd';
-    this.ctx.lineWidth = 0.3;
-    this.ctx.textBaseline = 'middle';
+        this.ctx.strokeStyle = '#bdbdbd';
+        this.ctx.lineWidth = 0.3;
+        this.ctx.textBaseline = 'middle';
 
-    const defaultRowHeight = 25;
-    const defaultColWidth = 100;
+        const defaultRowHeight = 25;
+        const defaultColWidth = 100;
 
-    const startCol = Math.max(0, Math.floor(this.scrollX / defaultColWidth));
-    const startRow = Math.max(0, Math.floor(this.scrollY / defaultRowHeight));
+        const startCol = Math.max(0, Math.floor(this.scrollX / defaultColWidth));
+        const startRow = Math.max(0, Math.floor(this.scrollY / defaultRowHeight));
 
-    let y = -this.scrollY;
+        let y = -this.scrollY;
 
-    for (let i = -1; i < this.maxRows && y < this.canvas.height; i++) {
-        const row = i >= 0 ? this.rows.get(i) : null;
-        const height = i === -1 ? this.colHeaderHeight : (row?.height || defaultRowHeight);
+        for (let i = -1; i < this.maxRows && y < this.canvas.height; i++) {
+            const row = i >= 0 ? this.rows.get(i) : null;
+            const height = i === -1 ? this.colHeaderHeight : (row?.height || defaultRowHeight);
 
-        let x = -this.scrollX;
+            let x = -this.scrollX;
 
-        for (let j = -1; j < this.maxCols && x < this.canvas.width; j++) {
-            const col = j >= 0 ? this.getColumn(j) : null;
-            const width = j === -1 ? this.rowHeaderWidth : (col?.width || defaultColWidth);
+            for (let j = -1; j < this.maxCols && x < this.canvas.width; j++) {
+                const col = j >= 0 ? this.getColumn(j) : null;
+                const width = j === -1 ? this.rowHeaderWidth : (col?.width || defaultColWidth);
 
-            if (x + width > 0 && y + height > 0) {
-                if (i === -1 && j === -1) {
-                    // Top-left corner
-                    this.ctx.fillStyle = '#e0e0e0';
-                    this.ctx.fillRect(x, y, width, height);
-                } else if (i === -1) {
-                    // Column header
-                    this.ctx.fillStyle = col?.selected ? '#3498db' : '#ecf0f1';
-                    this.ctx.fillRect(x, y, width, height);
+                if (x + width > 0 && y + height > 0) {
+                    if (i === -1 && j === -1) {
+                        // Top-left corner
+                        this.ctx.fillStyle = '#e0e0e0';
+                        this.ctx.fillRect(x, y, width, height);
+                    } else if (i === -1) {
+                        // Column header
+                        this.ctx.fillStyle = col?.selected ? '#3498db' : '#ecf0f1';
+                        this.ctx.fillRect(x, y, width, height);
 
-                    // Borders
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x, y);                   // Top
-                    this.ctx.lineTo(x + width, y);
-                    this.ctx.moveTo(x + width, y);           // Right
-                    this.ctx.lineTo(x + width, y + height);
-                    this.ctx.stroke();
+                        // Borders
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, y);                   // Top
+                        this.ctx.lineTo(x + width, y);
+                        this.ctx.moveTo(x + width, y);           // Right
+                        this.ctx.lineTo(x + width, y + height);
+                        this.ctx.stroke();
 
-                    // Text
-                    this.ctx.fillStyle = '#616161';
-                    this.ctx.font = '18px Arial';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.fillText(col?.name || '', x + width / 2, y + height / 2);
-                } else if (j === -1) {
-                    // Row header
-                    this.ctx.fillStyle = row?.selected ? '#3498db' : '#f5f5f5';
-                    this.ctx.fillRect(x, y, width, height);
+                        // Text
+                        this.ctx.fillStyle = '#616161';
+                        this.ctx.font = '18px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.fillText(col?.name || '', x + width / 2, y + height / 2);
+                    } else if (j === -1) {
+                        // Row header
+                        this.ctx.fillStyle = row?.selected ? '#3498db' : '#f5f5f5';
+                        this.ctx.fillRect(x, y, width, height);
 
-                    // Borders
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x, y);                  // Left
-                    this.ctx.lineTo(x, y + height);
-                    this.ctx.moveTo(x, y + height);         // Bottom
-                    this.ctx.lineTo(x + width, y + height);
-                    this.ctx.stroke();
+                        // Borders
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, y);                  // Left
+                        this.ctx.lineTo(x, y + height);
+                        this.ctx.moveTo(x, y + height);         // Bottom
+                        this.ctx.lineTo(x + width, y + height);
+                        this.ctx.stroke();
 
-                    // Text
-                    this.ctx.fillStyle = '#2c3e50';
-                    this.ctx.font = '15px Arial';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.fillText((i + 1).toString(), x + width / 2, y + height / 2);
-                } else {
-                    // Main cell
-                    this.ctx.fillStyle = '#ffffff';
-                    this.ctx.fillRect(x, y, width, height);
-
-                    // Borders
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x, y);                   // Top
-                    this.ctx.lineTo(x + width, y);
-                    this.ctx.moveTo(x + width, y);           // Right
-                    this.ctx.lineTo(x + width, y + height);
-                    this.ctx.stroke();
-
-                    // Cell content
-                    const value = this.getCellValue(i, j);
-                    if (value) {
+                        // Text
                         this.ctx.fillStyle = '#2c3e50';
-                        this.ctx.font = '14px Arial';
-                        this.ctx.textAlign = 'left';
-                        this.ctx.fillText(value.toString().substring(0, 15), x + 5, y + height / 2);
-                    }
-                }
-            }
-
-            x += width;
-        }
-
-        y += height;
-    }
-
-    this.drawSelection();
-    this.updateStats();
-}
-
-
-    drawHeaders() {
-        this.ctx.fillStyle = '#ecf0f1';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.colHeaderHeight);
-        this.ctx.fillRect(0, 0, this.rowHeaderWidth, this.canvas.height);
-
-        this.ctx.strokeStyle = '#bdbdbd';
-        this.ctx.lineWidth = 0.3;
-
-        // Column headers
-        let x = this.rowHeaderWidth - this.scrollX;
-        for (let i = 0; i < this.maxCols && x < this.canvas.width; i++) {
-            const column = this.getColumn(i);
-            const width = column ? column.width : 100;
-
-            if (x + width > this.rowHeaderWidth) {
-                this.ctx.fillStyle = column && column.selected ? '#3498db' : '#ecf0f1';
-                this.ctx.fillRect(x, 0, width, this.colHeaderHeight);
-
-                this.ctx.beginPath();
-                // Top border
-                this.ctx.moveTo(x, 0);
-                this.ctx.lineTo(x + width, 0);
-                // Right border
-                this.ctx.moveTo(x + width, 0);
-                this.ctx.lineTo(x + width, this.colHeaderHeight);
-                this.ctx.stroke();
-
-                this.ctx.fillStyle = '#616161';
-                this.ctx.font = '18px Arial';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText(column ? column.name : '', x + width / 2, 20);
-            }
-
-            x += width;
-        }
-
-        // Row headers
-        let y = this.colHeaderHeight - this.scrollY;
-        for (let i = 0; i < this.maxRows && y < this.canvas.height; i++) {
-            const row = this.rows.get(i);
-            const height = row ? row.height : 25;
-
-            if (y + height > this.colHeaderHeight) {
-                this.ctx.fillStyle = row && row.selected ? '#3498db' : '#f5f5f5';
-                this.ctx.fillRect(0, y, this.rowHeaderWidth, height);
-
-                this.ctx.beginPath();
-                // Left border
-                this.ctx.moveTo(0, y);
-                this.ctx.lineTo(0, y + height);
-                // Bottom border
-                this.ctx.moveTo(0, y + height);
-                this.ctx.lineTo(this.rowHeaderWidth, y + height);
-                this.ctx.stroke();
-
-
-                this.ctx.fillStyle = '#2c3e50';
-                this.ctx.font = '15px Arial';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText((i + 1).toString(), this.rowHeaderWidth / 2, y + height / 2 + 4);
-            }
-
-            y += height;
-        }
-    }
-
-    drawCells() {
-        this.ctx.strokeStyle = '#bdbdbd';
-        this.ctx.lineWidth = 0.3;
-
-        const startCol = Math.max(0, Math.floor(this.scrollX / 100));
-        const startRow = Math.max(0, Math.floor(this.scrollY / 25));
-
-        let y = this.colHeaderHeight - this.scrollY;
-        for (let i = startRow; i < this.maxRows && y < this.canvas.height; i++) {
-            const row = this.rows.get(i);
-            const height = row ? row.height : 25;
-
-            if (y + height > this.colHeaderHeight) {
-                let x = this.rowHeaderWidth - this.scrollX;
-
-                for (let j = startCol; j < this.maxCols && x < this.canvas.width; j++) {
-                    const column = this.getColumn(j);
-                    const width = column ? column.width : 100;
-
-                    if (x + width > this.rowHeaderWidth) {
-                        // Draw cell background
+                        this.ctx.font = '15px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.fillText((i + 1).toString(), x + width / 2, y + height / 2);
+                    } else {
+                        // Main cell
                         this.ctx.fillStyle = '#ffffff';
                         this.ctx.fillRect(x, y, width, height);
 
+                        // Borders
                         this.ctx.beginPath();
-
-                        // Top border
-                        this.ctx.moveTo(x, y);
+                        this.ctx.moveTo(x, y);                   // Top
                         this.ctx.lineTo(x + width, y);
-
-                        // Right border
-                        this.ctx.moveTo(x + width, y);
+                        this.ctx.moveTo(x + width, y);           // Right
                         this.ctx.lineTo(x + width, y + height);
-
                         this.ctx.stroke();
 
-                        // Draw cell content
+                        // Cell content
                         const value = this.getCellValue(i, j);
                         if (value) {
                             this.ctx.fillStyle = '#2c3e50';
                             this.ctx.font = '14px Arial';
                             this.ctx.textAlign = 'left';
-                            this.ctx.fillText(value.toString().substring(0, 15), x + 5, y + height / 2 + 4);
+                            this.ctx.fillText(value.toString().substring(0, 15), x + 5, y + height / 2);
                         }
                     }
-
-                    x += width;
                 }
+
+                x += width;
             }
 
             y += height;
         }
+
+        this.drawSelection();
+        this.updateStats();
     }
 
     drawSelection() {
@@ -776,7 +671,7 @@ class ExcelGrid {
     updateStats() {
         const stats = document.getElementById('stats');
         if (this.selection.type === 'none') {
-            stats.textContent = 'Ready';
+            stats.textContent = '';
             return;
         }
 
@@ -804,7 +699,6 @@ class ExcelGrid {
         this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
         this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
 
-        // Add this inside setupEventListeners method
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -812,7 +706,6 @@ class ExcelGrid {
             }
         });
 
-        // Add this line in setupEventListeners method
         this.canvas.addEventListener('mouseleave', () => {
             this.canvas.style.cursor = 'cell';
             if (this.resizing) {
@@ -886,7 +779,7 @@ class ExcelGrid {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        if (this.resizing) {
+        if (this.mouseDown && this.resizing) {
             this.handleResize(x, y);
             return;
         }
@@ -998,7 +891,8 @@ class ExcelGrid {
         }
 
         return false;
-    } handleResize(x, y) {
+    }
+    handleResize(x, y) {
         if (this.resizeType === 'col') {
             const column = this.getColumn(this.resizeIndex);
             if (column) {
@@ -1172,5 +1066,4 @@ window.addEventListener('resize', () => {
 });
 
 
-// Initial setup
 commandManager.updateButtons();
