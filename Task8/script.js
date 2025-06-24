@@ -403,7 +403,7 @@ class ExcelGrid {
 
     setupKeyboardListeners() {
         window.addEventListener('keydown', (e) => {
-            if (this.editingCell) return; // Don't scroll while editing
+            if (this.editingCell) return;
 
             const isCtrl = e.ctrlKey || e.metaKey;
             const isShift = e.shiftKey;
@@ -642,6 +642,9 @@ class ExcelGrid {
         }
 
         this.drawSelection();
+        if(this.editingCell) {
+            this.stopEditing();
+        }
         this.updateStats();
     }
 
