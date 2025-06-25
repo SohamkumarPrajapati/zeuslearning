@@ -642,7 +642,7 @@ class ExcelGrid {
         }
 
         this.drawSelection();
-        if(this.editingCell) {
+        if (this.editingCell) {
             this.stopEditing();
         }
         this.updateStats();
@@ -725,7 +725,13 @@ class ExcelGrid {
             } else if (e.key === 'Escape') {
                 this.cancelEditing();
             }
+            else {
+                this.cellEditor.style.caretColor = 'black'; // Show caret when typing
+            }
         });
+        this.cellEditor.addEventListener('dblclick', (e) => {
+            this.cellEditor.style.caretColor = 'black'; // Show caret when clicking
+        })
     }
 
     handleMouseDown(e) {
@@ -972,20 +978,25 @@ class ExcelGrid {
     startEditing(row, col) {
         this.editingCell = { row, col };
         const value = this.getCellValue(row, col);
+        let isClickedAgain = false;
 
         const x = this.getColumnPosition(col);
         const y = this.getRowPosition(row);
         const column = this.getColumn(col);
         const rowObj = this.getRow(row);
 
-        this.cellEditor.style.left = x + 'px';
-        this.cellEditor.style.top = y + 'px';
+        this.cellEditor.style.left = x - 1+ 'px';
+        this.cellEditor.style.top = y - 1+ 'px';
         this.cellEditor.style.width = column.width + 'px';
         this.cellEditor.style.height = rowObj.height + 'px';
         this.cellEditor.style.display = 'block';
         this.cellEditor.value = value;
+        this.cellEditor.readOnly = false;
+
+        this.cellEditor.style.caretColor = 'transparent';
+
         this.cellEditor.focus();
-        this.cellEditor.select();
+        // this.cellEditor.select();
     }
 
     stopEditing() {
