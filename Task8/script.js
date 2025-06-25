@@ -142,20 +142,17 @@ class Column {
  * Handles different types of selections and provides selection utilities
  */
 class Selection {
-    /**
-     * Initializes a new Selection object with no active selection
-     */
     constructor() {
         /** @type {number} Starting row index of the selection */
-        this.startRow = -1;
+        this.startRow = 0;
         /** @type {number} Starting column index of the selection */
-        this.startCol = -1;
+        this.startCol = 0;
         /** @type {number} Ending row index of the selection */
-        this.endRow = -1;
+        this.endRow = 0;
         /** @type {number} Ending column index of the selection */
-        this.endCol = -1;
+        this.endCol = 0;
         /** @type {string} Type of selection: 'none', 'cell', 'row', 'column', 'range' */
-        this.type = 'none';
+        this.type = 'cell';
     }
 
     /**
@@ -570,14 +567,15 @@ class ExcelGrid {
                 const col = j >= 0 ? this.getColumn(j) : null;
                 const width = j === -1 ? this.rowHeaderWidth : (col?.width || defaultColWidth);
 
-                if (x + width > 0 && y + height > 0) {
+                if (true) {
                     if (i === -1 && j === -1) {
                         // Top-left corner
                         this.ctx.fillStyle = '#e0e0e0';
                         this.ctx.fillRect(x, y, width, height);
+                        console.log(`corner box`)
                     } else if (i === -1) {
                         // Column header
-                        this.ctx.fillStyle = col?.selected ? '#3498db' : '#ecf0f1';
+                        this.ctx.fillStyle = col?.selected ? '#107c41' : '#ecf0f1';
                         this.ctx.fillRect(x, y, width, height);
 
                         // Borders
@@ -589,13 +587,14 @@ class ExcelGrid {
                         this.ctx.stroke();
 
                         // Text
-                        this.ctx.fillStyle = '#616161';
+                        // this.ctx.fillStyle = '#616161';
+                        this.ctx.fillStyle = (col?.selected) ? 'white' : '#616161';
                         this.ctx.font = '18px Arial';
                         this.ctx.textAlign = 'center';
                         this.ctx.fillText(col?.name || '', x + width / 2, y + height / 2);
                     } else if (j === -1) {
                         // Row header
-                        this.ctx.fillStyle = row?.selected ? '#3498db' : '#f5f5f5';
+                        this.ctx.fillStyle = row?.selected ? '#107c41' : '#f5f5f5';
                         this.ctx.fillRect(x, y, width, height);
 
                         // Borders
@@ -607,7 +606,8 @@ class ExcelGrid {
                         this.ctx.stroke();
 
                         // Text
-                        this.ctx.fillStyle = '#2c3e50';
+                        this.ctx.fillStyle = (row?.selected) ? 'white' : '#616161';
+                        // this.ctx.fillStyle = '#2c3e50';
                         this.ctx.font = '15px Arial';
                         this.ctx.textAlign = 'center';
                         this.ctx.fillText((i + 1).toString(), x + width / 2, y + height / 2);
@@ -699,7 +699,7 @@ class ExcelGrid {
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-        this.canvas.addEventListener('click', (e) => this.handleClick(e));
+        this.canvas.addEventListener('click', (e) => this.handleDoubleClick(e));
         this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
 
         document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -725,8 +725,8 @@ class ExcelGrid {
             } else if (e.key === 'Escape') {
                 this.cancelEditing();
             }
-            else {
-                this.cellEditor.style.caretColor = 'black'; // Show caret when typing
+            else if(e.ctrlKey && e.key.toLowerCase() === 'z'){
+                this.stopEditing();
             }
         });
         this.cellEditor.addEventListener('dblclick', (e) => {
@@ -823,7 +823,7 @@ class ExcelGrid {
         this.updateCursor(x, y);
     }
 
-    handleClick(e) {
+    handleDoubleClick(e) {
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -838,11 +838,13 @@ class ExcelGrid {
         e.preventDefault();
 
         const scrollSpeed = 50;
+        let zoomLevel = 1;
 
         if (e.shiftKey) {
             // Horizontal scroll when shift is held
             this.scrollX = Math.max(0, this.scrollX + e.deltaY);
-        } else {
+        }
+        else {
             // Normal vertical scroll
             if (e.deltaX !== 0) {
                 // Native horizontal scroll (trackpad)
@@ -871,7 +873,7 @@ class ExcelGrid {
                     this.resizing = true;
                     this.resizeType = 'col';
                     this.resizeIndex = i;
-                    this.canvas.style.cursor = 'col-resize';
+                    this.canvas.style.cursor = 'e-resize';
                     return true;
                 }
 
@@ -891,7 +893,7 @@ class ExcelGrid {
                     this.resizing = true;
                     this.resizeType = 'row';
                     this.resizeIndex = i;
-                    this.canvas.style.cursor = 'row-resize';
+                    this.canvas.style.cursor = 'n-resize';
                     return true;
                 }
 
@@ -985,15 +987,15 @@ class ExcelGrid {
         const column = this.getColumn(col);
         const rowObj = this.getRow(row);
 
-        this.cellEditor.style.left = x - 1+ 'px';
-        this.cellEditor.style.top = y - 1+ 'px';
+        this.cellEditor.style.left = x - 1 + 'px';
+        this.cellEditor.style.top = y - 1 + 'px';
         this.cellEditor.style.width = column.width + 'px';
         this.cellEditor.style.height = rowObj.height + 'px';
         this.cellEditor.style.display = 'block';
         this.cellEditor.value = value;
         this.cellEditor.readOnly = false;
+        this.cellEditor.style.caretColor = 'black';
 
-        this.cellEditor.style.caretColor = 'transparent';
 
         this.cellEditor.focus();
         // this.cellEditor.select();
@@ -1044,13 +1046,14 @@ class ExcelGrid {
 
             // Set column headers
             for (let i = 0; i < headers.length; i++) {
-                const column = this.getColumn(i);
-                column.name = headers[i];
+                const value = headers[i];
+                this.setCellValue(0, i, value !== undefined ? value.toUpperCase() : '');
             }
 
             // Load data
-            for (let rowIndex = 0; rowIndex < data.length && rowIndex < this.maxRows; rowIndex++) {
-                const record = data[rowIndex];
+            let recordCount = 0;
+            for (let rowIndex = 1; recordCount < data.length && rowIndex < this.maxRows; rowIndex++) {
+                const record = data[recordCount++];
                 for (let colIndex = 0; colIndex < headers.length && colIndex < this.maxCols; colIndex++) {
                     const value = record[headers[colIndex]];
                     this.setCellValue(rowIndex, colIndex, value !== undefined ? value : '');
