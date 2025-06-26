@@ -35,9 +35,8 @@
 
         .canvas-container {
             position: relative;
-            overflow: hidden;
+            overflow: auto;
             height: calc(100vh - 80px);
-            /* Subtract toolbar height */
             width: 100vw;
         }
 
@@ -50,13 +49,11 @@
 
         .container {
             max-width: none;
-            /* Remove max-width */
             width: 100vw;
             height: 100vh;
             margin: 0;
             background: white;
             border-radius: 0;
-            /* Remove border radius for full screen */
             box-shadow: none;
             overflow: hidden;
         }
@@ -64,7 +61,6 @@
         body {
             margin: 0;
             padding: 0;
-            /* Remove padding */
             font-family: Arial, sans-serif;
             background: #f5f5f5;
         }
