@@ -9,5 +9,3 @@ window.addEventListener('resize', () => {
     grid.initializeCanvas();
     grid.render();
 });
-
-grid.commandManager.updateButtons();

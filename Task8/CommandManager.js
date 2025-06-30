@@ -143,7 +143,6 @@ export class CommandManager {
             this.undoStack.shift();
         }
         this.redoStack = [];
-        this.updateButtons();
     }
 
     /**
@@ -154,7 +153,6 @@ export class CommandManager {
             const command = this.undoStack.pop();
             command.undo();
             this.redoStack.push(command);
-            this.updateButtons();
             this.grid?.render();
         }
     }
@@ -167,16 +165,8 @@ export class CommandManager {
             const command = this.redoStack.pop();
             command.execute();
             this.undoStack.push(command);
-            this.updateButtons();
             this.grid?.render();
         }
     }
 
-    /**
-     * Updates the enabled/disabled state of undo/redo buttons in the UI.
-     */
-    updateButtons() {
-        document.getElementById('undoBtn').disabled = this.undoStack.length === 0;
-        document.getElementById('redoBtn').disabled = this.redoStack.length === 0;
-    }
 }

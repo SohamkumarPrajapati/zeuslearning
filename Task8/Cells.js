@@ -22,4 +22,36 @@ export class Cells {
         }
         return this.cells.get(`${rowIndex},${columnIndex}`) || ''; // return empty string if cell is not set
     }
+
+    shiftCellsToNextRow(rowIndex) {
+        this.noOfRows++;
+        const newCells = new Map();
+        for (const [key, value] of this.cells.entries()) {
+            const [r, c] = key.split(',').map(Number);
+            if (r >= rowIndex) {
+                // Shift to next row
+                newCells.set(`${r + 1},${c}`, value);
+            } else {
+                // Keep as is
+                newCells.set(key, value);
+            }
+        }
+        this.cells = newCells;
+    }
+
+    shiftCellsToNextColumn(colIndex) {
+        this.noOfColumns++;
+        const newCells = new Map();
+        for (const [key, value] of this.cells.entries()) {
+            const [r, c] = key.split(',').map(Number);
+            if (c >= colIndex) {
+                // Shift to next row
+                newCells.set(`${r},${c + 1}`, value);
+            } else {
+                // Keep as is
+                newCells.set(key, value);
+            }
+        }
+        this.cells = newCells;
+    }
 }

@@ -8,13 +8,13 @@ export class Rows {
     }
 
     setRowHeight(rowIndex, newHeight) {
-        if(rowIndex < 0 || rowIndex >= this.noOfRows) {
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
             throw new Error("Row index out of bounds");
         }
         else if (newHeight <= 0) {
             throw new Error("Row height must be greater than zero");
         }
-        if(newHeight === DEFAULT_ROW_HEIGHT) {
+        if (newHeight === DEFAULT_ROW_HEIGHT) {
             this.alteredRows.delete(rowIndex); // remove the row height if it is reset to default
             return;
         }
@@ -23,21 +23,21 @@ export class Rows {
     }
 
     getRowHeight(rowIndex) {
-        if(rowIndex < 0 || rowIndex >= this.noOfRows) {
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
             throw new Error("Row index out of bounds");
         }
         return this.alteredRows.get(rowIndex) || DEFAULT_ROW_HEIGHT;
     }
 
     addRowSelection(rowIndex) {
-        if(rowIndex < 0 || rowIndex >= this.noOfRows) {
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
             throw new Error("Row index out of bounds");
         }
         this.selectedRows.add(rowIndex);
     }
 
     removeRowSelection(rowIndex) {
-        if(rowIndex < 0 || rowIndex >= this.noOfRows) {
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
             throw new Error("Row index out of bounds");
         }
         this.selectedRows.delete(rowIndex);
@@ -48,9 +48,71 @@ export class Rows {
     }
 
     isRowSelected(rowIndex) {
-        if(rowIndex < 0 || rowIndex >= this.noOfRows) {
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
             throw new Error("Row index out of bounds");
         }
         return this.selectedRows.has(rowIndex);
+    }
+
+    insertRowUp(rowIndex) {
+        if (rowIndex < 0 || rowIndex > this.noOfRows) {
+            throw new Error("Row index out of bounds");
+        }
+
+        // Increase the row count
+        this.noOfRows++;
+
+        // Shift alteredRows for rows >= rowIndex
+        const newAlteredRows = new Map();
+        for (const [idx, height] of this.alteredRows.entries()) {
+            if (idx >= rowIndex) {
+                newAlteredRows.set(idx + 1, height);
+            } else {
+                newAlteredRows.set(idx, height);
+            }
+        }
+        this.alteredRows = newAlteredRows;
+
+        // Shift selectedRows for rows >= rowIndex
+        const newSelectedRows = new Set();
+        for (const idx of this.selectedRows) {
+            if (idx >= rowIndex) {
+                newSelectedRows.add(idx + 1);
+            } else {
+                newSelectedRows.add(idx);
+            }
+        }
+        this.selectedRows = newSelectedRows;
+    }
+
+    insertRowDown(rowIndex) {
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
+            throw new Error("Row index out of bounds");
+        }
+
+        // Increase the row count
+        this.noOfRows++;
+
+        // Shift alteredRows for rows > rowIndex
+        const newAlteredRows = new Map();
+        for (const [idx, height] of this.alteredRows.entries()) {
+            if (idx > rowIndex) {
+                newAlteredRows.set(idx + 1, height);
+            } else {
+                newAlteredRows.set(idx, height);
+            }
+        }
+        this.alteredRows = newAlteredRows;
+
+        // Shift selectedRows for rows > rowIndex
+        const newSelectedRows = new Set();
+        for (const idx of this.selectedRows) {
+            if (idx > rowIndex) {
+                newSelectedRows.add(idx + 1);
+            } else {
+                newSelectedRows.add(idx);
+            }
+        }
+        this.selectedRows = newSelectedRows;
     }
 }

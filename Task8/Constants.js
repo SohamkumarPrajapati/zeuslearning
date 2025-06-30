@@ -1,9 +1,9 @@
 // Constants for grid dimensions and sizes
 /** @constant {number} DEFAULT_ROW_HEIGHT - Default height for grid rows */
-export const DEFAULT_ROW_HEIGHT = 25;
+export const DEFAULT_ROW_HEIGHT = 24;
 
 /** @constant {number} DEFAULT_COLUMN_WIDTH - Default width for grid columns */
-export const DEFAULT_COLUMN_WIDTH = 100;
+export const DEFAULT_COLUMN_WIDTH = 80;
 
 /** @constant {number} MAX_ROWS - Maximum number of rows in the grid */
 export const MAX_ROWS = 100000;

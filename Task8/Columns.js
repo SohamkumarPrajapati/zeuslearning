@@ -8,13 +8,13 @@ export class Columns {
     }
 
     setColumnWidth(columnIndex, newWidth) {
-        if(columnIndex < 0 || columnIndex >= this.noOfColumns) {
+        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
         }
         else if (newWidth <= 0) {
             throw new Error("Column width must be greater than zero");
         }
-        if(newWidth === DEFAULT_COLUMN_WIDTH) {
+        if (newWidth === DEFAULT_COLUMN_WIDTH) {
             this.alteredWidths.delete(columnIndex); // remove the column width if it is reset to default
             return;
         }
@@ -23,21 +23,21 @@ export class Columns {
     }
 
     getColumnWidth(columnIndex) {
-        if(columnIndex < 0 || columnIndex >= this.noOfColumns) {
+        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
         }
         return this.alteredWidths.get(columnIndex) || DEFAULT_COLUMN_WIDTH;
     }
 
     addColumnSelection(columnIndex) {
-        if(columnIndex < 0 || columnIndex >= this.noOfColumns) {
+        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
         }
         this.selectedColumns.add(columnIndex);
     }
 
     removeColumnSelection(columnIndex) {
-        if(columnIndex < 0 || columnIndex >= this.noOfColumns) {
+        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
         }
         this.selectedColumns.delete(columnIndex);
@@ -48,14 +48,14 @@ export class Columns {
     }
 
     isColumnSelected(columnIndex) {
-        if(columnIndex < 0 || columnIndex >= this.noOfColumns) {
+        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
         }
         return this.selectedColumns.has(columnIndex);
     }
 
     getColumnName(columnIndex) {
-        if(columnIndex < 0 || columnIndex >= this.noOfColumns) {
+        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
         }
         // Convert column index to column name (A, B, C, ...)
@@ -67,4 +67,68 @@ export class Columns {
         }
         return name;
     }
+
+    insertColumnLeft(colIndex) {
+        if (colIndex < 0 || colIndex > this.noOfColumns) {
+            throw new Error("Column index out of bounds");
+        }
+
+        // Increase the column count
+        this.noOfColumns++;
+
+        // Shift alteredWidths for columns >= colIndex
+        const newAlteredWidths = new Map();
+        for (const [idx, width] of this.alteredWidths.entries()) {
+            if (idx >= colIndex) {
+                newAlteredWidths.set(idx + 1, width);
+            } else {
+                newAlteredWidths.set(idx, width);
+            }
+        }
+        this.alteredWidths = newAlteredWidths;
+
+        // Shift selectedColumns for columns >= colIndex
+        const newSelectedColumns = new Set();
+        for (const idx of this.selectedColumns) {
+            if (idx >= colIndex) {
+                newSelectedColumns.add(idx + 1);
+            } else {
+                newSelectedColumns.add(idx);
+            }
+        }
+        this.selectedColumns = newSelectedColumns;
+    }
+
+    insertColumnRight(colIndex) {
+        if (colIndex < 0 || colIndex >= this.noOfColumns) {
+            throw new Error("Column index out of bounds");
+        }
+
+        // Increase the column count
+        this.noOfColumns++;
+
+        // Shift alteredWidths for columns > colIndex
+        const newAlteredWidths = new Map();
+        for (const [idx, width] of this.alteredWidths.entries()) {
+            if (idx > colIndex) {
+                newAlteredWidths.set(idx + 1, width);
+            } else {
+                newAlteredWidths.set(idx, width);
+            }
+        }
+        this.alteredWidths = newAlteredWidths;
+
+        // Shift selectedColumns for columns > colIndex
+        const newSelectedColumns = new Set();
+        for (const idx of this.selectedColumns) {
+            if (idx > colIndex) {
+                newSelectedColumns.add(idx + 1);
+            } else {
+                newSelectedColumns.add(idx);
+            }
+        }
+        this.selectedColumns = newSelectedColumns;
+    }
+
+
 }

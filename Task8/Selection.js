@@ -9,13 +9,13 @@ import { MAX_ROWS, MAX_COLS } from './Constants.js';
 export class Selection {
     constructor() {
         /** @type {number} Starting row index of the selection */
-        this.startRow = -1;
+        this.startRow = 0;
         /** @type {number} Starting column index of the selection */
-        this.startCol = -1;
+        this.startCol = 0;
         /** @type {number} Ending row index of the selection */
-        this.endRow = -1;
+        this.endRow = 0;
         /** @type {number} Ending column index of the selection */
-        this.endCol = -1;
+        this.endCol = 0;
         /** @type {string} Type of selection: 'none', 'cell', 'row', 'column', 'range' */
         this.type = 'cell';
     }
