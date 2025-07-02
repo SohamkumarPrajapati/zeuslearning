@@ -8,7 +8,7 @@
 import { Cells } from './Cells.js';
 import { Rows } from './Rows.js';
 import { Columns } from './Columns.js';
-import { Selection } from './Selection.js';
+import { SelectionManager } from './Selection.js';
 import { SetCellValueCommand, CommandManager } from './CommandManager.js';
 import { ResizeColumnCommand } from './CommandManager.js';
 import { ResizeRowCommand } from './CommandManager.js';
@@ -32,7 +32,7 @@ export class ExcelGrid {
         this.rows = new Rows(MAX_ROWS);
         this.columns = new Columns(MAX_COLS);
         this.cells = new Cells(MAX_ROWS, MAX_COLS);
-        this.selection = new Selection();
+        this.selectionManager = new SelectionManager();
         this.commandManager = new CommandManager(this);
 
         // UI/Viewport properties
@@ -49,6 +49,11 @@ export class ExcelGrid {
         this.startX = 0;
         this.startY = 0;
         this.dragStart = null;
+        this.headerDragType = null; // 'row' or 'col'
+        this.headerDragStart = null;
+        this.headerDragCurrent = null;
+        this.resizeInitialValue = null; // initial width or height
+        this.resizeInitialIndex = null; // index of column/row being resized
 
         // Cell editor setup
         this.cellEditor = document.getElementById('cellEditor');
@@ -344,7 +349,7 @@ export class ExcelGrid {
             this.ctx.fillStyle = this.rows.isRowSelected(iterationIndex) ? 'white' : '#616161';
             this.ctx.font = '15px Arial';
             this.ctx.textAlign = 'center';
-            this.ctx.fillText((iterationIndex+1).toString(), x + this.rowHeaderWidth / 2, y + rowHeight / 2);
+            this.ctx.fillText((iterationIndex + 1).toString(), x + this.rowHeaderWidth / 2, y + rowHeight / 2);
             y += rowHeight;
             iterationIndex++;
         }
@@ -369,44 +374,49 @@ export class ExcelGrid {
      * Draws the current selection rectangle on the canvas.
      */
     drawSelection() {
-        if (this.selection.type === 'none') return;
+        if (this.selectionManager.selectionCount === 0) return;
 
-        this.ctx.strokeStyle = '#107c41';
-        this.ctx.lineWidth = 1.5;
-        this.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
 
-        const startX = this.getColumnPosition(this.selection.startCol);
-        const startY = this.getRowPosition(this.selection.startRow);
-        const endX = this.getColumnPosition(this.selection.endCol + 1);
-        const endY = this.getRowPosition(this.selection.endRow + 1);
+        let selections = this.selectionManager.selections;
+        for (let selection of selections.values()) {
 
-        const x = Math.max(this.rowHeaderWidth, startX);
-        const y = Math.max(this.colHeaderHeight, startY);
-        const width = Math.min(this.canvas.width, endX) - x;
-        const height = Math.min(this.canvas.height, endY) - y;
+            this.ctx.strokeStyle = '#107c41';
+            this.ctx.lineWidth = 1.5;
+            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
 
-        if (width > 0 && height > 0) {
-            this.ctx.fillRect(x, y, width, height);
-            this.ctx.strokeRect(x, y, width, height);
-        }
+            const startX = this.getColumnPosition(selection.startCol);
+            const startY = this.getRowPosition(selection.startRow);
+            const endX = this.getColumnPosition(selection.endCol + 1);
+            const endY = this.getRowPosition(selection.endRow + 1);
 
-        if (this.selection.type !== 'row' && this.selection.type !== 'column') {
-            for (let i = this.selection.startCol; i <= this.selection.endCol; i++) {
-                this.highlightCellHeaders(this.selection.startRow, i);
+            const x = Math.max(this.rowHeaderWidth, startX);
+            const y = Math.max(this.colHeaderHeight, startY);
+            const width = Math.min(this.canvas.width, endX) - x;
+            const height = Math.min(this.canvas.height, endY) - y;
+
+            if (width > 0 && height > 0) {
+                this.ctx.fillRect(x, y, width, height);
+                this.ctx.strokeRect(x, y, width, height);
             }
-            for (let i = this.selection.startRow; i <= this.selection.endRow; i++) {
-                this.highlightCellHeaders(i, this.selection.startCol);
+
+            if (selection.type !== 'row' && selection.type !== 'column') {
+                for (let i = selection.startCol; i <= selection.endCol; i++) {
+                    this.highlightCellHeaders(selection.startRow, i);
+                }
+                for (let i = selection.startRow; i <= selection.endRow; i++) {
+                    this.highlightCellHeaders(i, selection.startCol);
+                }
             }
-        }
 
-        if (this.selection.type === 'row') {
-            this.insertRowUpBtn.disabled = false;
-            this.insertRowDownBtn.disabled = false;
-        }
+            if (selection.type === 'row') {
+                this.insertRowUpBtn.disabled = false;
+                this.insertRowDownBtn.disabled = false;
+            }
 
-        if (this.selection.type === 'column') {
-            this.insertColumnLeftBtn.disabled = false;
-            this.insertColumnRightBtn.disabled = false;
+            if (selection.type === 'column') {
+                this.insertColumnLeftBtn.disabled = false;
+                this.insertColumnRightBtn.disabled = false;
+            }
         }
     }
 
@@ -415,12 +425,12 @@ export class ExcelGrid {
      */
     updateStats() {
         const stats = document.getElementById('stats');
-        if (this.selection.type === 'none') {
+        if (this.selectionManager.selectionCount === 0) {
             stats.textContent = '';
             return;
         }
 
-        const cells = this.selection.getSelectedCells(this);
+        const cells = this.selectionManager.getSelectedCells(this);
         const numericCells = cells.filter(cell => !isNaN(parseFloat(cell.value)) && isFinite(cell.value));
 
         if (numericCells.length === 0) {
@@ -444,7 +454,7 @@ export class ExcelGrid {
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-        this.canvas.addEventListener('click', (e) => this.handleClick(e));
+        this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
         this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
 
         document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -470,37 +480,72 @@ export class ExcelGrid {
             } else if (e.key === 'Escape') {
                 this.cancelEditing();
             }
-            else if (e.ctrlKey && e.key.toLowerCase() === 'z') {
-                this.stopEditing();
-            }
         });
-        this.cellEditor.addEventListener('dblclick', (e) => {
-            this.cellEditor.style.caretColor = 'black'; // Show caret when clicking
-        })
 
         this.insertRowUpBtn.addEventListener('click', () => {
-            this.cells.shiftCellsToNextRow(this.selection.startRow);
-            this.rows.insertRowUp(this.selection.startRow);
-            this.selection.startRow++;
-            this.selection.endRow++;
-            this.render();
+            let selections = this.selectionManager.selections;
+
+            for (let selection of selections.values()) {
+                if (selection.type !== 'row') {
+                    continue;
+                }
+                let startRow = selection.startRow;
+                this.cells.shiftCellsToNextRow(startRow);
+                this.rows.insertRowUp(startRow);
+                this.selectionManager.resetSelections();
+                this.selectionManager.addRowSelection(startRow + 1);
+                this.render();
+                break;
+            }
         });
         this.insertRowDownBtn.addEventListener('click', () => {
-            this.cells.shiftCellsToNextRow(this.selection.startRow + 1);
-            this.rows.insertRowDown(this.selection.startRow);
-            this.render();
+            let selections = this.selectionManager.selections;
+
+            for (let selection of selections.values()) {
+                if (selection.type !== 'row') {
+                    continue;
+                }
+                let startRow = selection.startRow;
+                this.cells.shiftCellsToNextRow(startRow + 1);
+                this.rows.insertRowDown(startRow);
+                this.selectionManager.resetSelections();
+                this.selectionManager.addRowSelection(startRow);
+                this.render();
+                break;
+            }
         });
         this.insertColumnLeftBtn.addEventListener('click', () => {
-            this.columns.insertColumnLeft(this.selection.startCol);
-            this.cells.shiftCellsToNextColumn(this.selection.startCol);
-            this.selection.startCol++;
-            this.selection.endCol++;
-            this.render();
+            let selections = this.selectionManager.selections;
+
+            for (let selection of selections.values()) {
+                if (selection.type !== 'column') {
+                    continue;
+                }
+                let startCol = selection.startCol;
+                this.cells.shiftCellsToNextColumn(startCol);
+                this.columns.insertColumnLeft(startCol);
+                this.selectionManager.resetSelections();
+                this.selectionManager.addColumnSelection(startCol + 1);
+                this.render();
+                break;
+            }
+
         });
         this.insertColumnRightBtn.addEventListener('click', () => {
-            this.columns.insertColumnRight(this.selection.startCol);
-            this.cells.shiftCellsToNextColumn(this.selection.startCol+1);
-            this.render();
+            let selections = this.selectionManager.selections;
+
+            for (let selection of selections.values()) {
+                if (selection.type !== 'column') {
+                    continue;
+                }
+                let startCol = selection.startCol;
+                this.cells.shiftCellsToNextColumn(startCol + 1);
+                this.columns.insertColumnRight(startCol);
+                this.selectionManager.resetSelections();
+                this.selectionManager.addColumnSelection(startCol);
+                this.render();
+                break;
+            }
         });
     }
 
@@ -519,31 +564,81 @@ export class ExcelGrid {
 
         // Check for resize handles
         if (this.checkResizeHandle(x, y)) {
+            this.resizing = true;
+            if (this.resizeType === 'col') {
+                this.resizeInitialValue = this.columns.getColumnWidth(this.resizeIndex);
+                this.resizeInitialIndex = this.resizeIndex;
+            } else if (this.resizeType === 'row') {
+                this.resizeInitialValue = this.rows.getRowHeight(this.resizeIndex);
+                this.resizeInitialIndex = this.resizeIndex;
+            }
             return;
         }
 
 
-        // Check for header clicks
+        this.insertRowUpBtn.disabled = true;
+        this.insertRowDownBtn.disabled = true;
+        this.insertColumnLeftBtn.disabled = true;
+        this.insertColumnRightBtn.disabled = true;
+
+        // --- Header drag selection logic ---
+        // Column header drag selection
         if (y < this.colHeaderHeight && x > this.rowHeaderWidth) {
-            // Column selection
             const col = this.getColumnAtPosition(x);
             if (col >= 0) {
-                this.selection.setColumn(col);
-                this.clearColumnSelection();
+                this.headerDragType = 'col';
+                this.headerDragStart = col;
+                this.headerDragCurrent = col;
+                this.headerDragCtrl = e.ctrlKey; // <--- Track ctrl state for drag
+                if (!e.ctrlKey) {
+                    this.selectionManager.resetSelections();
+                    this.clearColumnSelection();
+                    this.columns.removeAllColumnSelections();
+                }
+                // Always add the starting column to the selection
+                this.selectionManager.addColumnSelection(col);
                 this.columns.addColumnSelection(col);
                 this.render();
+                return;
             }
-            return;
+        }
+
+        // Row header drag selection
+        if (x < this.rowHeaderWidth && y > this.colHeaderHeight) {
+            const row = this.getRowAtPosition(y);
+            if (row >= 0) {
+                this.headerDragType = 'row';
+                this.headerDragStart = row;
+                this.headerDragCurrent = row;
+                this.headerDragCtrl = e.ctrlKey; // <--- Track ctrl state for drag
+                if (!e.ctrlKey) {
+                    this.selectionManager.resetSelections();
+                    this.clearRowSelection();
+                    this.rows.removeAllRowSelections();
+                }
+                this.selectionManager.addRowSelection(row);
+                this.rows.addRowSelection(row);
+                this.render();
+                return;
+            }
         }
 
         if (x < this.rowHeaderWidth && y > this.colHeaderHeight) {
             // Row selection
             const row = this.getRowAtPosition(y);
             if (row >= 0) {
-                this.selection.setRow(row);
-                this.clearRowSelection();
-                this.rows.addRowSelection(row);
-                this.render();
+                if (e.ctrlKey) {
+                    this.selectionManager.addRowSelection(row);
+                    this.rows.addRowSelection(row);
+                    this.render();
+                }
+                else {
+                    this.selectionManager.resetSelections();
+                    this.selectionManager.addRowSelection(row);
+                    this.clearRowSelection();
+                    this.rows.addRowSelection(row);
+                    this.render();
+                }
             }
             return;
         }
@@ -551,9 +646,12 @@ export class ExcelGrid {
         // Cell selection
         const cell = this.getCellAtPosition(x, y);
         if (cell) {
-            this.selection.setCell(cell.row, cell.col);
+            if (!e.ctrlKey) {
+                this.selectionManager.resetSelections();
+                this.clearAllSelection();
+            }
+            this.selectionManager.addSingleCellSelection(cell.row, cell.col);
             this.dragStart = cell;
-            this.clearAllSelection();
             this.render();
         }
     }
@@ -567,7 +665,48 @@ export class ExcelGrid {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        if (this.mouseDown && this.resizing) {
+        // --- Header drag selection logic ---
+        if (this.mouseDown && this.headerDragType === 'col') {
+            const col = this.getColumnAtPosition(x);
+            if (col >= 0 && col !== this.headerDragCurrent) {
+                this.headerDragCurrent = col;
+                if (!this.headerDragCtrl) {
+                    this.selectionManager.resetSelections();
+                    this.clearColumnSelection();
+                    this.columns.removeAllColumnSelections();
+                }
+                const start = Math.min(this.headerDragStart, col);
+                const end = Math.max(this.headerDragStart, col);
+                for (let c = start; c <= end; c++) {
+                    this.selectionManager.addColumnSelection(c);
+                    this.columns.addColumnSelection(c);
+                }
+                this.render();
+            }
+            return;
+        }
+
+        if (this.mouseDown && this.headerDragType === 'row') {
+            const row = this.getRowAtPosition(y);
+            if (row >= 0 && row !== this.headerDragCurrent) {
+                this.headerDragCurrent = row;
+                if (!this.headerDragCtrl) {
+                    this.selectionManager.resetSelections();
+                    this.clearRowSelection();
+                    this.rows.removeAllRowSelections();
+                }
+                const start = Math.min(this.headerDragStart, row);
+                const end = Math.max(this.headerDragStart, row);
+                for (let r = start; r <= end; r++) {
+                    this.selectionManager.addRowSelection(r);
+                    this.rows.addRowSelection(r);
+                }
+                this.render();
+            }
+            return;
+        }
+
+        if (this.mouseDown && this.resizing && !this.headerDragType) {
             this.handleResize(x, y);
             return;
         }
@@ -575,7 +714,7 @@ export class ExcelGrid {
         if (this.mouseDown && this.dragStart) {
             const cell = this.getCellAtPosition(x, y);
             if (cell) {
-                this.selection.setRange(this.dragStart.row, this.dragStart.col, cell.row, cell.col);
+                this.selectionManager.addRangeSelection(this.dragStart.row, this.dragStart.col, cell.row, cell.col);
                 this.render();
             }
         }
@@ -591,13 +730,35 @@ export class ExcelGrid {
     handleMouseUp(e) {
         this.mouseDown = false;
         this.dragStart = null;
+        this.headerDragType = null;
+        this.headerDragStart = null;
+        this.headerDragCurrent = null;
 
         if (this.resizing) {
-            this.resizing = false;
-            this.resizeType = null;
-            this.resizeIndex = -1;
-            this.canvas.style.cursor = 'cell';
+            if (this.resizeType === 'col') {
+                const finalWidth = this.columns.getColumnWidth(this.resizeInitialIndex);
+                if (finalWidth !== this.resizeInitialValue) {
+                    const command = new ResizeColumnCommand(
+                        this, this.resizeInitialIndex, finalWidth, this.resizeInitialValue
+                    );
+                    this.commandManager.executeCommand(command);
+                }
+            } else if (this.resizeType === 'row') {
+                const finalHeight = this.rows.getRowHeight(this.resizeInitialIndex);
+                if (finalHeight !== this.resizeInitialValue) {
+                    const command = new ResizeRowCommand(
+                        this, this.resizeInitialIndex, finalHeight, this.resizeInitialValue
+                    );
+                    this.commandManager.executeCommand(command);
+                }
+            }
         }
+        this.resizing = false;
+        this.resizeType = null;
+        this.resizeIndex = -1;
+        this.resizeInitialValue = null;
+        this.resizeInitialIndex = null;
+        this.canvas.style.cursor = 'cell';
 
         // Update cursor based on current position
         const rect = this.canvas.getBoundingClientRect();
@@ -610,19 +771,19 @@ export class ExcelGrid {
      * Handles click events for cell selection and editing.
      * @param {MouseEvent} e
      */
-    handleClick(e) {
+    handleDoubleClick(e) {
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
         const cell = this.getCellAtPosition(x, y);
         if (cell) {
+            if (!e.ctrlKey) {
+                this.selectionManager.resetSelections();
+                this.clearAllSelection();
+            }
             this.startEditing(cell.row, cell.col);
             this.highlightCellHeaders(cell.row, cell.col);
-            this.insertRowUpBtn.disabled = true;
-            this.insertRowDownBtn.disabled = true;
-            this.insertColumnLeftBtn.disabled = true;
-            this.insertColumnRightBtn.disabled = true;
         }
     }
 
@@ -677,7 +838,6 @@ export class ExcelGrid {
                 currentX += columnWidth;
 
                 if (Math.abs(x - currentX) < 5 && currentX > this.rowHeaderWidth) {
-                    this.resizing = true;
                     this.resizeType = 'col';
                     this.resizeIndex = i;
                     this.canvas.style.cursor = 'e-resize';
@@ -696,7 +856,6 @@ export class ExcelGrid {
                 currentY += rowHeight;
 
                 if (Math.abs(y - currentY) < 5 && currentY > this.colHeaderHeight) {
-                    this.resizing = true;
                     this.resizeType = 'row';
                     this.resizeIndex = i;
                     this.canvas.style.cursor = 'n-resize';
@@ -717,25 +876,15 @@ export class ExcelGrid {
     */
     handleResize(x, y) {
         if (this.resizeType === 'col') {
-            const columnWidth = this.columns.getColumnWidth(this.resizeIndex);
-            if (columnWidth) {
-                const oldWidth = columnWidth;
-                const startX = this.getColumnPosition(this.resizeIndex);
-                const newWidth = Math.max(20, x - startX);
-
-                const command = new ResizeColumnCommand(this, this.resizeIndex, newWidth, oldWidth);
-                this.commandManager.executeCommand(command);
-            }
+            const startX = this.getColumnPosition(this.resizeIndex);
+            const newWidth = Math.max(20, x - startX);
+            this.columns.setColumnWidth(this.resizeIndex, newWidth); // Just update visually
+            this.render();
         } else if (this.resizeType === 'row') {
-            const rowHeight = this.rows.getRowHeight(this.resizeIndex);
-            if (rowHeight) {
-                const oldHeight = rowHeight;
-                const startY = this.getRowPosition(this.resizeIndex);
-                const newHeight = Math.max(15, y - startY);
-
-                const command = new ResizeRowCommand(this, this.resizeIndex, newHeight, oldHeight);
-                this.commandManager.executeCommand(command);
-            }
+            const startY = this.getRowPosition(this.resizeIndex);
+            const newHeight = Math.max(15, y - startY);
+            this.rows.setRowHeight(this.resizeIndex, newHeight); // Just update visually
+            this.render();
         }
     }
 
@@ -825,14 +974,13 @@ export class ExcelGrid {
         const columnWidth = this.columns.getColumnWidth(col);
         const rowHeight = this.rows.getRowHeight(row);
 
-        this.cellEditor.style.left = x + 'px';
-        this.cellEditor.style.top = y + 'px';
+        this.cellEditor.style.left = x - 1 + 'px';
+        this.cellEditor.style.top = y - 1 + 'px';
         this.cellEditor.style.width = columnWidth + 'px';
         this.cellEditor.style.height = rowHeight + 'px';
         this.cellEditor.style.display = 'block';
         this.cellEditor.value = value;
         this.cellEditor.readOnly = false;
-        this.cellEditor.style.caretColor = 'transparent';
 
         this.cellEditor.focus();
         // this.cellEditor.select();
@@ -868,7 +1016,7 @@ export class ExcelGrid {
         this.ctx.font = '15px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.fillText(this.columns.getColumnName(colIndex) || '', xCol + colWidth / 2, yCol + this.colHeaderHeight / 2);
-        this.ctx.fillText(rowIndex+1, xRow + this.rowHeaderWidth / 2, yRow + rowHeight / 2);
+        this.ctx.fillText(rowIndex + 1, xRow + this.rowHeaderWidth / 2, yRow + rowHeight / 2);
 
     }
 
@@ -880,7 +1028,7 @@ export class ExcelGrid {
 
         const oldValue = this.getCellValue(this.editingCell.row, this.editingCell.col);
         const newValue = this.cellEditor.value;
-
+        console.log(oldValue)
         if (oldValue !== newValue) {
             const command = new SetCellValueCommand(
                 this, this.editingCell.row, this.editingCell.col, newValue, oldValue

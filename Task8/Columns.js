@@ -1,12 +1,24 @@
 import { DEFAULT_COLUMN_WIDTH } from './Constants.js';
-
+/**
+ * Class representing the columns of the grid, including their widths and selection state.
+ */
 export class Columns {
+    /**
+     * Constructs a Columns object.
+     * @param {number} count - The initial number of columns.
+     */
     constructor(count) {
         this.noOfColumns = count;
         this.alteredWidths = new Map(); // stores the altered width of the column from default width in form of column index and width
         this.selectedColumns = new Set();  // stores the selected columns in form of column index
     }
 
+    /**
+     * Sets the width of a specific column.
+     * @param {number} columnIndex - The index of the column.
+     * @param {number} newWidth - The new width to set.
+     * @throws Will throw an error if the column index is out of bounds or newWidth is not positive.
+     */
     setColumnWidth(columnIndex, newWidth) {
         if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
@@ -22,6 +34,12 @@ export class Columns {
         this.alteredWidths.set(columnIndex, newWidth);
     }
 
+    /**
+     * Gets the width of a specific column.
+     * @param {number} columnIndex - The index of the column.
+     * @returns {number} The width of the column.
+     * @throws Will throw an error if the column index is out of bounds.
+     */
     getColumnWidth(columnIndex) {
         if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
@@ -29,6 +47,11 @@ export class Columns {
         return this.alteredWidths.get(columnIndex) || DEFAULT_COLUMN_WIDTH;
     }
 
+    /**
+     * Adds a column to the set of selected columns.
+     * @param {number} columnIndex - The index of the column to select.
+     * @throws Will throw an error if the column index is out of bounds.
+     */
     addColumnSelection(columnIndex) {
         if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
@@ -36,6 +59,11 @@ export class Columns {
         this.selectedColumns.add(columnIndex);
     }
 
+    /**
+     * Removes a column from the set of selected columns.
+     * @param {number} columnIndex - The index of the column to deselect.
+     * @throws Will throw an error if the column index is out of bounds.
+     */
     removeColumnSelection(columnIndex) {
         if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
@@ -43,10 +71,19 @@ export class Columns {
         this.selectedColumns.delete(columnIndex);
     }
 
+    /**
+     * Removes all column selections.
+     */
     removeAllColumnSelections() {
         this.selectedColumns.clear(); // clear all selected columns
     }
 
+    /**
+     * Checks if a column is selected.
+     * @param {number} columnIndex - The index of the column.
+     * @returns {boolean} True if the column is selected, false otherwise.
+     * @throws Will throw an error if the column index is out of bounds.
+     */
     isColumnSelected(columnIndex) {
         if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
@@ -54,6 +91,12 @@ export class Columns {
         return this.selectedColumns.has(columnIndex);
     }
 
+    /**
+     * Gets the column name (A, B, C, ...).
+     * @param {number} columnIndex - The index of the column.
+     * @returns {string} The column name.
+     * @throws Will throw an error if the column index is out of bounds.
+     */
     getColumnName(columnIndex) {
         if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
@@ -68,6 +111,12 @@ export class Columns {
         return name;
     }
 
+    /**
+     * Inserts a new column to the left of the specified column index.
+     * Shifts altered column widths and selected columns accordingly.
+     * @param {number} colIndex - The index to the right of which to insert the new column.
+     * @throws Will throw an error if the column index is out of bounds.
+     */
     insertColumnLeft(colIndex) {
         if (colIndex < 0 || colIndex > this.noOfColumns) {
             throw new Error("Column index out of bounds");
@@ -99,6 +148,12 @@ export class Columns {
         this.selectedColumns = newSelectedColumns;
     }
 
+    /**
+     * Inserts a new column to the right of the specified column index.
+     * Shifts altered column widths and selected columns accordingly.
+     * @param {number} colIndex - The index to the left of which to insert the new column.
+     * @throws Will throw an error if the column index is out of bounds.
+     */
     insertColumnRight(colIndex) {
         if (colIndex < 0 || colIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");

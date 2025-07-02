@@ -10,22 +10,6 @@
 
 
 <body>
-    <div class="container">
-        <div class="toolbar">
-            <input type="file" id="fileInput" accept=".json" style="display: none;">
-            <button onclick="document.getElementById('fileInput').click()">Load JSON File</button>
-            <button id="insertRowUpBtn" disabled>Insert Row Up</button>
-            <button id="insertRowDownBtn" disabled>Insert Row Down</button>
-            <button id="insertColumnLeftBtn" disabled>Insert Column Left</button>
-            <button id="insertColumnRightBtn" disabled>Insert Column Right</button>
-            <div class="stats" id="stats"></div>
-        </div>
-        <div class="canvas-container">
-            <canvas id="gridCanvas"></canvas>
-            <input type="text" class="cell-editor" id="cellEditor" style="display: none;">
-
-        </div>
-    </div>
     <script src="./script.js" type="module"></script>
 </body>
 

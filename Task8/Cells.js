@@ -1,10 +1,22 @@
 export class Cells {
+    /**
+     * Constructs a Cells object.
+     * @param {number} rowCount - The initial number of rows.
+     * @param {number} columnCount - The initial number of columns.
+     */
     constructor(rowCount, columnCount) {
         this.noOfRows = rowCount;
         this.noOfColumns = columnCount;
         this.cells = new Map(); // stores cell values in form of (rowIndex, columnIndex) -> value, only stores the values that are not empty
     }
 
+    /**
+     * Sets the value of a specific cell.
+     * @param {number} rowIndex - The row index of the cell.
+     * @param {number} columnIndex - The column index of the cell.
+     * @param {string} value - The value to set in the cell.
+     * @throws Will throw an error if the row or column index is out of bounds.
+     */
     setCellValue(rowIndex, columnIndex, value) {
         if (rowIndex < 0 || rowIndex >= this.noOfRows || columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Row or column index out of bounds");
@@ -16,6 +28,13 @@ export class Cells {
         }
     }
 
+    /**
+     * Gets the value of a specific cell.
+     * @param {number} rowIndex - The row index of the cell.
+     * @param {number} columnIndex - The column index of the cell.
+     * @returns {string} The value of the cell, or an empty string if not set.
+     * @throws Will throw an error if the row or column index is out of bounds.
+     */
     getCellValue(rowIndex, columnIndex) {
         if (rowIndex < 0 || rowIndex >= this.noOfRows || columnIndex < 0 || columnIndex >= this.noOfColumns) {
             throw new Error("Row or column index out of bounds");
@@ -23,6 +42,11 @@ export class Cells {
         return this.cells.get(`${rowIndex},${columnIndex}`) || ''; // return empty string if cell is not set
     }
 
+    /**
+     * Shifts all cells at or below the given row index down by one row.
+     * Increases the row count.
+     * @param {number} rowIndex - The row index from which to start shifting.
+     */
     shiftCellsToNextRow(rowIndex) {
         this.noOfRows++;
         const newCells = new Map();
@@ -39,6 +63,11 @@ export class Cells {
         this.cells = newCells;
     }
 
+    /**
+     * Shifts all cells at or after the given column index right by one column.
+     * Increases the column count.
+     * @param {number} colIndex - The column index from which to start shifting.
+     */
     shiftCellsToNextColumn(colIndex) {
         this.noOfColumns++;
         const newCells = new Map();
