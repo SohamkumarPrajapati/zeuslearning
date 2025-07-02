@@ -150,34 +150,7 @@ export class SelectionManager {
         let endRow = Math.max(r1, r2);
         let endCol = Math.max(c1, c2);
 
-        // Find and merge overlapping/adjacent ranges
-        let merged = false;
-        let toDelete = [];
-        for (let [key, selection] of this.selections.entries()) {
-            let parsed = this.parseSelectionKey(key);
-            if (parsed.type === 'range') {
-                // Check for overlap or adjacency
-                if (
-                    !(endRow < parsed.startRow - 1 || startRow > parsed.endRow + 1 ||
-                        endCol < parsed.startCol - 1 || startCol > parsed.endCol + 1)
-                ) {
-                    // Merge ranges
-                    startRow = Math.min(startRow, parsed.startRow);
-                    startCol = Math.min(startCol, parsed.startCol);
-                    endRow = Math.max(endRow, parsed.endRow);
-                    endCol = Math.max(endCol, parsed.endCol);
-                    toDelete.push(key);
-                    merged = true;
-                }
-            }
-        }
-        // Remove old overlapping/adjacent ranges
-        for (let key of toDelete) {
-            this.selections.delete(key);
-            this.selectionCount--;
-        }
-
-        // Add the merged (or new) range
+        this.resetSelections();
         let rangeSelection = new Selection();
         rangeSelection.setRange(startRow, startCol, endRow, endCol);
         let key = `${startRow},${startCol}:${endRow},${endCol}`;

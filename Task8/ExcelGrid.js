@@ -54,6 +54,7 @@ export class ExcelGrid {
         this.headerDragCurrent = null;
         this.resizeInitialValue = null; // initial width or height
         this.resizeInitialIndex = null; // index of column/row being resized
+        this.lastSelectedCell = null;
 
         // Cell editor setup
         this.cellEditor = document.getElementById('cellEditor');
@@ -88,6 +89,17 @@ export class ExcelGrid {
     setupKeyboardListeners() {
         window.addEventListener('keydown', (e) => {
             if (this.editingCell) return;
+
+            // // If a cell is selected and a character key is pressed, start editing
+            // if (this.lastSelectedCell && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            //     this.startEditing(this.lastSelectedCell.row, this.lastSelectedCell.col);
+            //     // Set the editor value to the pressed key
+            //     this.cellEditor.value = e.key;
+            //     // Move cursor to end
+            //     this.cellEditor.setSelectionRange(1, 1);
+            //     e.preventDefault();
+            //     return;
+            // }
 
             const isCtrl = e.ctrlKey || e.metaKey;
             const isShift = e.shiftKey;
@@ -558,6 +570,10 @@ export class ExcelGrid {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
+        if(x < 0 || y < 0){
+            return;
+        }
+
         this.mouseDown = true;
         this.startX = x;
         this.startY = y;
@@ -646,12 +662,13 @@ export class ExcelGrid {
         // Cell selection
         const cell = this.getCellAtPosition(x, y);
         if (cell) {
-            if (!e.ctrlKey) {
+            if (true) {
                 this.selectionManager.resetSelections();
                 this.clearAllSelection();
             }
             this.selectionManager.addSingleCellSelection(cell.row, cell.col);
             this.dragStart = cell;
+            this.lastSelectedCell = cell; // <--- Track last selected cell
             this.render();
         }
     }
@@ -782,6 +799,7 @@ export class ExcelGrid {
                 this.selectionManager.resetSelections();
                 this.clearAllSelection();
             }
+            this.lastSelectedCell = cell; // <--- Track last selected cell
             this.startEditing(cell.row, cell.col);
             this.highlightCellHeaders(cell.row, cell.col);
         }
