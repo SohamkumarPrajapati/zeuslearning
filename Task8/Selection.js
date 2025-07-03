@@ -1,4 +1,5 @@
 import { MAX_ROWS, MAX_COLS } from './Constants.js';
+import { ExcelGrid } from './ExcelGrid.js';
 
 /**
  * Manages cell, row, column, and range selections in the grid
@@ -104,6 +105,53 @@ export class Selection {
         }
         return cells;
     }
+
+    /**
+     * draws selection on screen (canvas)
+     * @param {ExcelGrid} grid 
+     */
+    drawSelection(grid) {
+
+        grid.ctx.strokeStyle = '#107c41';
+        grid.ctx.lineWidth = 1.5;
+        grid.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
+        let drawBorders = (grid.selectionManager.selectionCount === 1);
+
+        const startX = grid.getColumnPosition(this.startCol);
+        const startY = grid.getRowPosition(this.startRow);
+        const endX = grid.getColumnPosition(this.endCol + 1);
+        const endY = grid.getRowPosition(this.endRow + 1);
+
+        const x = Math.max(grid.rowHeaderWidth, startX);
+        const y = Math.max(grid.colHeaderHeight, startY);
+        const width = Math.min(grid.canvas.width, endX) - x;
+        const height = Math.min(grid.canvas.height, endY) - y;
+
+        if (width > 0 && height > 0) {
+            grid.ctx.fillRect(x, y, width, height);
+            if(drawBorders){grid.ctx.strokeRect(x, y, width, height);}
+        }
+
+        // if (this.type !== 'row' && this.type !== 'column') {
+        //     for (let i = this.startCol; i <= this.endCol; i++) {
+        //         grid.highlightCellHeaders(this.startRow, i);
+        //     }
+        //     for (let i = this.startRow; i <= this.endRow; i++) {
+        //         grid.highlightCellHeaders(i, this.startCol);
+        //     }
+        // }
+
+        if (this.type === 'row') {
+            grid.insertRowUpBtn.disabled = false;
+            grid.insertRowDownBtn.disabled = false;
+        }
+
+        if (this.type === 'column') {
+            grid.insertColumnLeftBtn.disabled = false;
+            grid.insertColumnRightBtn.disabled = false;
+        }
+
+    }
 }
 
 
@@ -128,13 +176,15 @@ export class SelectionManager {
         cellSelection.setCell(row, col);
         this.selections.set(`${row},${col}`, cellSelection);
         this.selectionCount++;
+        return cellSelection;
     }
 
-    addRowSelection(row) {
+    addRowSelection(row, endRow = row) {
         let rowSelection = new Selection();
         rowSelection.setRow(row);
         this.selections.set(`${row},${-1}`, rowSelection);
         this.selectionCount++;
+        return rowSelection;
     }
 
     addColumnSelection(col) {
@@ -142,6 +192,7 @@ export class SelectionManager {
         colSelection.setColumn(col);
         this.selections.set(`${-1},${col}`, colSelection);
         this.selectionCount++;
+        return colSelection;
     }
 
     addRangeSelection(r1, c1, r2, c2) {
@@ -156,6 +207,7 @@ export class SelectionManager {
         let key = `${startRow},${startCol}:${endRow},${endCol}`;
         this.selections.set(key, rangeSelection);
         this.selectionCount++;
+        return rangeSelection;
     }
 
     /**
@@ -178,6 +230,35 @@ export class SelectionManager {
         }
     }
 
+    /**
+     * 
+     * @param {number} col 
+     * @returns colSelection if it exists
+     */
+    getColumnSelection(col) {
+        let key = `${-1},${col}`;
+        if (this.selections.has(key)) {
+            return this.selections.get(key);
+        }
+    }
+
+    /**
+     * 
+     * @param {number} row 
+     * @returns rowSelection if it exists or null otherwise
+     */
+    getRowSelection(row) {
+        let key = `${row},${-1}`;
+        if (this.selections.has(key)) {
+            return this.selections.get(key);
+        }
+    }
+
+    /**
+     * returns theh array of cells of all the selections
+     * @param {ExcelGrid} grid 
+     * @returns 
+     */
     getSelectedCells(grid) {
         let cells = [];
 
@@ -204,6 +285,11 @@ export class SelectionManager {
         return cells;
     }
 
+    /**
+     * returns the key after parsing it 
+     * @param {string} key 
+     * @returns 
+     */
     parseSelectionKey(key) {
         if (key.includes(':')) {
             // Range selection: "startRow,startCol:endRow,endCol"
@@ -264,6 +350,16 @@ export class SelectionManager {
         }
 
         this.selections = newSelections;
+    }
+
+    isColumnSelected(colIndex) {
+        let key = `${-1},${colIndex}`;
+        return this.selections.has(key);
+    }
+
+    isRowSelected(rowIndex) {
+        let key = `${rowIndex},${-1}`;
+        return this.selections.has(key);
     }
 
 

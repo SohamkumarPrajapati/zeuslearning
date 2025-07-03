@@ -10,9 +10,8 @@ import { Rows } from './Rows.js';
 import { Columns } from './Columns.js';
 import { SelectionManager } from './Selection.js';
 import { SetCellValueCommand, CommandManager } from './CommandManager.js';
-import { ResizeColumnCommand } from './CommandManager.js';
-import { ResizeRowCommand } from './CommandManager.js';
 import { MAX_COLS, MAX_ROWS } from './Constants.js';
+import { EventHandler } from './EventHandler.js';
 
 // ==========================
 // ExcelGrid Class
@@ -41,34 +40,20 @@ export class ExcelGrid {
         this.scrollX = 0;
         this.scrollY = 0;
 
-        // Mouse interaction states
-        this.mouseDown = false;
-        this.resizing = false;
-        this.resizeType = null; // 'row' or 'col'
-        this.resizeIndex = -1;
-        this.startX = 0;
-        this.startY = 0;
-        this.dragStart = null;
-        this.headerDragType = null; // 'row' or 'col'
-        this.headerDragStart = null;
-        this.headerDragCurrent = null;
-        this.resizeInitialValue = null; // initial width or height
-        this.resizeInitialIndex = null; // index of column/row being resized
-        this.lastSelectedCell = null;
-
         // Cell editor setup
         this.cellEditor = document.getElementById('cellEditor');
         this.editingCell = null;
 
+        
         //Row Column Insertion
         this.insertRowUpBtn = document.getElementById('insertRowUpBtn');
         this.insertRowDownBtn = document.getElementById('insertRowDownBtn');
         this.insertColumnLeftBtn = document.getElementById('insertColumnLeftBtn');
         this.insertColumnRightBtn = document.getElementById('insertColumnRightBtn');
-
-        this.setupEventListeners();
+        
         this.initializeCanvas();
-        this.setupKeyboardListeners();
+        // Eventhandler initialization
+        this.eventHandler = new EventHandler(this);
         this.render();
     }
 
@@ -83,70 +68,7 @@ export class ExcelGrid {
         this.ctx.scale(dpr, dpr);
     }
 
-    /**
-     * Listens for keyboard events like undo/redo and arrow key scrolling.
-     */
-    setupKeyboardListeners() {
-        window.addEventListener('keydown', (e) => {
-            if (this.editingCell) return;
-
-            // // If a cell is selected and a character key is pressed, start editing
-            // if (this.lastSelectedCell && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            //     this.startEditing(this.lastSelectedCell.row, this.lastSelectedCell.col);
-            //     // Set the editor value to the pressed key
-            //     this.cellEditor.value = e.key;
-            //     // Move cursor to end
-            //     this.cellEditor.setSelectionRange(1, 1);
-            //     e.preventDefault();
-            //     return;
-            // }
-
-            const isCtrl = e.ctrlKey || e.metaKey;
-            const isShift = e.shiftKey;
-
-            // === Undo/Redo ===
-            if (isCtrl && e.key.toLowerCase() === 'z') {
-                e.preventDefault();
-                if (isShift) {
-                    this.commandManager.redo();
-                } else {
-                    this.commandManager.undo();
-                }
-                return;
-            }
-
-            const scrollSpeed = 50;
-            let shouldRender = false;
-            // Scroll using arrow keys
-
-            switch (e.key) {
-                case 'ArrowRight':
-                    this.scrollX += scrollSpeed;
-                    shouldRender = true;
-                    e.preventDefault();
-                    break;
-                case 'ArrowLeft':
-                    this.scrollX = Math.max(0, this.scrollX - scrollSpeed);
-                    shouldRender = true;
-                    e.preventDefault();
-                    break;
-                case 'ArrowDown':
-                    this.scrollY += scrollSpeed;
-                    shouldRender = true;
-                    e.preventDefault();
-                    break;
-                case 'ArrowUp':
-                    this.scrollY = Math.max(0, this.scrollY - scrollSpeed);
-                    shouldRender = true;
-                    e.preventDefault();
-                    break;
-            }
-
-            if (shouldRender) {
-                this.render();
-            }
-        });
-    }
+    
 
     /**
      * Gets a cell's value.
@@ -187,7 +109,7 @@ export class ExcelGrid {
      */
     setColumnWidth(colIndex, width) {
         this.columns.setColumnWidth(colIndex, width);
-        this.render();
+        // this.render();
     }
     /**
      * Sets a row's height.
@@ -196,7 +118,7 @@ export class ExcelGrid {
      */
     setRowHeight(rowIndex, height) {
         this.rows.setRowHeight(rowIndex, height);
-        this.render();
+        // this.render();
     }
     /**
      * Gets the X pixel position of a column.
@@ -270,17 +192,29 @@ export class ExcelGrid {
         this.ctx.lineWidth = 0.3;
         this.ctx.textBaseline = 'middle';
 
-        let x = 0;
-        let y = 0;
+        this.drawGridCells();
+        this.drawColumnHeader();
+        this.drawRowHeader();
+        this.drawTopLeftCorner();
+        this.drawSelection();
 
-        //drawing cells
-        x = this.rowHeaderWidth;
+        if (this.editingCell) {
+            this.stopEditing();
+        }
+        this.updateStats();
+    }
+
+    /**
+     * drawing the grid cells on the canvas
+     */
+    drawGridCells() {
+        let x = this.rowHeaderWidth;
         let colIndex = this.getColumnAtPosition(x);
         x = this.getColumnPosition(colIndex);
         let columnIteartor = colIndex;
         while (x < this.canvas.width) {
 
-            y = this.colHeaderHeight;
+            let y = this.colHeaderHeight;
             let colWidth = this.columns.getColumnWidth(columnIteartor);
             let rowIndex = this.getRowAtPosition(y);
             y = this.getRowPosition(rowIndex);
@@ -311,17 +245,20 @@ export class ExcelGrid {
             x += colWidth;
 
         }
+    }
 
-
-        //drawing column header
-        x = this.rowHeaderWidth;
-        y = 0;
-        colIndex = this.getColumnAtPosition(x);
+    /**
+     * drawing the header section of the columns
+     */
+    drawColumnHeader() {
+        let x = this.rowHeaderWidth;
+        let y = 0;
+        let colIndex = this.getColumnAtPosition(x);
         x = this.getColumnPosition(colIndex);
         let iterationIndex = colIndex;
         while (x < this.canvas.width) {
             let colWidth = this.columns.getColumnWidth(iterationIndex);
-            this.ctx.fillStyle = this.columns.isColumnSelected(iterationIndex) ? '#107c41' : '#ecf0f1';
+            this.ctx.fillStyle = this.selectionManager.isColumnSelected(iterationIndex) ? '#107c41' : '#ecf0f1';
             this.ctx.fillRect(x, y, colWidth, this.colHeaderHeight);
 
             this.ctx.beginPath();
@@ -331,24 +268,27 @@ export class ExcelGrid {
             this.ctx.lineTo(x + colWidth, y + this.colHeaderHeight);
             this.ctx.stroke();
 
-            this.ctx.fillStyle = (this.columns.isColumnSelected(iterationIndex)) ? 'white' : '#616161';
+            this.ctx.fillStyle = (this.selectionManager.isColumnSelected(iterationIndex)) ? 'white' : '#616161';
             this.ctx.font = '18px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText(this.columns.getColumnName(iterationIndex) || '', x + colWidth / 2, y + this.colHeaderHeight / 2);
             x += colWidth;
             iterationIndex++;
         }
+    }
 
-
-        //drawing row header
-        x = 0;
-        y = this.colHeaderHeight;
+    /**
+     * drawing the header section for rows
+     */
+    drawRowHeader() {
+        let x = 0;
+        let y = this.colHeaderHeight;
         let rowIndex = this.getRowAtPosition(y);
         y = this.getRowPosition(rowIndex);
-        iterationIndex = rowIndex;
+        let iterationIndex = rowIndex;
         while (y < this.canvas.height) {
             let rowHeight = this.rows.getRowHeight(iterationIndex);
-            this.ctx.fillStyle = this.rows.isRowSelected(iterationIndex) ? '#107c41' : '#f5f5f5';
+            this.ctx.fillStyle = this.selectionManager.isRowSelected(iterationIndex) ? '#107c41' : '#f5f5f5';
             this.ctx.fillRect(x, y, this.rowHeaderWidth, rowHeight);
 
             this.ctx.beginPath();
@@ -358,28 +298,23 @@ export class ExcelGrid {
             this.ctx.lineTo(x + this.rowHeaderWidth, y + rowHeight);
             this.ctx.stroke();
 
-            this.ctx.fillStyle = this.rows.isRowSelected(iterationIndex) ? 'white' : '#616161';
+            this.ctx.fillStyle = this.selectionManager.isRowSelected(iterationIndex) ? 'white' : '#616161';
             this.ctx.font = '15px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText((iterationIndex + 1).toString(), x + this.rowHeaderWidth / 2, y + rowHeight / 2);
             y += rowHeight;
             iterationIndex++;
         }
+    }
 
-
-        //drawing top-right corner cell
-        x = 0;
-        y = 0;
+    /**
+     * drawing top-right corner cell
+     */
+    drawTopLeftCorner() {
+        let x = 0;
+        let y = 0;
         this.ctx.fillStyle = '#e0e0e0';
         this.ctx.fillRect(x, y, this.rowHeaderWidth, this.colHeaderHeight);
-
-
-
-        this.drawSelection();
-        if (this.editingCell) {
-            this.stopEditing();
-        }
-        this.updateStats();
     }
 
     /**
@@ -391,44 +326,7 @@ export class ExcelGrid {
 
         let selections = this.selectionManager.selections;
         for (let selection of selections.values()) {
-
-            this.ctx.strokeStyle = '#107c41';
-            this.ctx.lineWidth = 1.5;
-            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
-
-            const startX = this.getColumnPosition(selection.startCol);
-            const startY = this.getRowPosition(selection.startRow);
-            const endX = this.getColumnPosition(selection.endCol + 1);
-            const endY = this.getRowPosition(selection.endRow + 1);
-
-            const x = Math.max(this.rowHeaderWidth, startX);
-            const y = Math.max(this.colHeaderHeight, startY);
-            const width = Math.min(this.canvas.width, endX) - x;
-            const height = Math.min(this.canvas.height, endY) - y;
-
-            if (width > 0 && height > 0) {
-                this.ctx.fillRect(x, y, width, height);
-                this.ctx.strokeRect(x, y, width, height);
-            }
-
-            if (selection.type !== 'row' && selection.type !== 'column') {
-                for (let i = selection.startCol; i <= selection.endCol; i++) {
-                    this.highlightCellHeaders(selection.startRow, i);
-                }
-                for (let i = selection.startRow; i <= selection.endRow; i++) {
-                    this.highlightCellHeaders(i, selection.startCol);
-                }
-            }
-
-            if (selection.type === 'row') {
-                this.insertRowUpBtn.disabled = false;
-                this.insertRowDownBtn.disabled = false;
-            }
-
-            if (selection.type === 'column') {
-                this.insertColumnLeftBtn.disabled = false;
-                this.insertColumnRightBtn.disabled = false;
-            }
+            selection.drawSelection(this);
         }
     }
 
@@ -459,467 +357,43 @@ export class ExcelGrid {
         stats.textContent = `Count: ${cells.length} | Sum: ${sum.toFixed(2)} | Avg: ${avg.toFixed(2)} | Min: ${min} | Max: ${max}`;
     }
 
-    /**
-     * Sets up event listeners for user interactions.
-     */
-    setupEventListeners() {
-        this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-        this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-        this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
-        this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
+    getCellAtPositionClamped(x, y) {
+        // Clamp x/y to the grid area
+        let col = -1, row = -1;
 
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                this.loadJSONFile(file);
-            }
-        });
-
-        this.canvas.addEventListener('mouseleave', () => {
-            this.canvas.style.cursor = 'cell';
-            if (this.resizing) {
-                this.resizing = false;
-                this.resizeType = null;
-                this.resizeIndex = -1;
-            }
-        });
-
-        this.cellEditor.addEventListener('blur', () => this.stopEditing());
-        this.cellEditor.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.stopEditing();
-            } else if (e.key === 'Escape') {
-                this.cancelEditing();
-            }
-        });
-
-        this.insertRowUpBtn.addEventListener('click', () => {
-            let selections = this.selectionManager.selections;
-
-            for (let selection of selections.values()) {
-                if (selection.type !== 'row') {
-                    continue;
-                }
-                let startRow = selection.startRow;
-                this.cells.shiftCellsToNextRow(startRow);
-                this.rows.insertRowUp(startRow);
-                this.selectionManager.resetSelections();
-                this.selectionManager.addRowSelection(startRow + 1);
-                this.render();
-                break;
-            }
-        });
-        this.insertRowDownBtn.addEventListener('click', () => {
-            let selections = this.selectionManager.selections;
-
-            for (let selection of selections.values()) {
-                if (selection.type !== 'row') {
-                    continue;
-                }
-                let startRow = selection.startRow;
-                this.cells.shiftCellsToNextRow(startRow + 1);
-                this.rows.insertRowDown(startRow);
-                this.selectionManager.resetSelections();
-                this.selectionManager.addRowSelection(startRow);
-                this.render();
-                break;
-            }
-        });
-        this.insertColumnLeftBtn.addEventListener('click', () => {
-            let selections = this.selectionManager.selections;
-
-            for (let selection of selections.values()) {
-                if (selection.type !== 'column') {
-                    continue;
-                }
-                let startCol = selection.startCol;
-                this.cells.shiftCellsToNextColumn(startCol);
-                this.columns.insertColumnLeft(startCol);
-                this.selectionManager.resetSelections();
-                this.selectionManager.addColumnSelection(startCol + 1);
-                this.render();
-                break;
-            }
-
-        });
-        this.insertColumnRightBtn.addEventListener('click', () => {
-            let selections = this.selectionManager.selections;
-
-            for (let selection of selections.values()) {
-                if (selection.type !== 'column') {
-                    continue;
-                }
-                let startCol = selection.startCol;
-                this.cells.shiftCellsToNextColumn(startCol + 1);
-                this.columns.insertColumnRight(startCol);
-                this.selectionManager.resetSelections();
-                this.selectionManager.addColumnSelection(startCol);
-                this.render();
-                break;
-            }
-        });
-    }
-
-    /**
-     * Handles mouse down events for selection, resizing, and editing.
-     * @param {MouseEvent} e
-     */
-    handleMouseDown(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        if(x < 0 || y < 0){
-            return;
-        }
-
-        this.mouseDown = true;
-        this.startX = x;
-        this.startY = y;
-
-        // Check for resize handles
-        if (this.checkResizeHandle(x, y)) {
-            this.resizing = true;
-            if (this.resizeType === 'col') {
-                this.resizeInitialValue = this.columns.getColumnWidth(this.resizeIndex);
-                this.resizeInitialIndex = this.resizeIndex;
-            } else if (this.resizeType === 'row') {
-                this.resizeInitialValue = this.rows.getRowHeight(this.resizeIndex);
-                this.resizeInitialIndex = this.resizeIndex;
-            }
-            return;
-        }
-
-
-        this.insertRowUpBtn.disabled = true;
-        this.insertRowDownBtn.disabled = true;
-        this.insertColumnLeftBtn.disabled = true;
-        this.insertColumnRightBtn.disabled = true;
-
-        // --- Header drag selection logic ---
-        // Column header drag selection
-        if (y < this.colHeaderHeight && x > this.rowHeaderWidth) {
-            const col = this.getColumnAtPosition(x);
-            if (col >= 0) {
-                this.headerDragType = 'col';
-                this.headerDragStart = col;
-                this.headerDragCurrent = col;
-                this.headerDragCtrl = e.ctrlKey; // <--- Track ctrl state for drag
-                if (!e.ctrlKey) {
-                    this.selectionManager.resetSelections();
-                    this.clearColumnSelection();
-                    this.columns.removeAllColumnSelections();
-                }
-                // Always add the starting column to the selection
-                this.selectionManager.addColumnSelection(col);
-                this.columns.addColumnSelection(col);
-                this.render();
-                return;
-            }
-        }
-
-        // Row header drag selection
-        if (x < this.rowHeaderWidth && y > this.colHeaderHeight) {
-            const row = this.getRowAtPosition(y);
-            if (row >= 0) {
-                this.headerDragType = 'row';
-                this.headerDragStart = row;
-                this.headerDragCurrent = row;
-                this.headerDragCtrl = e.ctrlKey; // <--- Track ctrl state for drag
-                if (!e.ctrlKey) {
-                    this.selectionManager.resetSelections();
-                    this.clearRowSelection();
-                    this.rows.removeAllRowSelections();
-                }
-                this.selectionManager.addRowSelection(row);
-                this.rows.addRowSelection(row);
-                this.render();
-                return;
-            }
-        }
-
-        if (x < this.rowHeaderWidth && y > this.colHeaderHeight) {
-            // Row selection
-            const row = this.getRowAtPosition(y);
-            if (row >= 0) {
-                if (e.ctrlKey) {
-                    this.selectionManager.addRowSelection(row);
-                    this.rows.addRowSelection(row);
-                    this.render();
-                }
-                else {
-                    this.selectionManager.resetSelections();
-                    this.selectionManager.addRowSelection(row);
-                    this.clearRowSelection();
-                    this.rows.addRowSelection(row);
-                    this.render();
-                }
-            }
-            return;
-        }
-
-        // Cell selection
-        const cell = this.getCellAtPosition(x, y);
-        if (cell) {
-            if (true) {
-                this.selectionManager.resetSelections();
-                this.clearAllSelection();
-            }
-            this.selectionManager.addSingleCellSelection(cell.row, cell.col);
-            this.dragStart = cell;
-            this.lastSelectedCell = cell; // <--- Track last selected cell
-            this.render();
-        }
-    }
-
-    /**
-     * Handles mouse move events for selection and resizing.
-     * @param {MouseEvent} e
-     */
-    handleMouseMove(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        // --- Header drag selection logic ---
-        if (this.mouseDown && this.headerDragType === 'col') {
-            const col = this.getColumnAtPosition(x);
-            if (col >= 0 && col !== this.headerDragCurrent) {
-                this.headerDragCurrent = col;
-                if (!this.headerDragCtrl) {
-                    this.selectionManager.resetSelections();
-                    this.clearColumnSelection();
-                    this.columns.removeAllColumnSelections();
-                }
-                const start = Math.min(this.headerDragStart, col);
-                const end = Math.max(this.headerDragStart, col);
-                for (let c = start; c <= end; c++) {
-                    this.selectionManager.addColumnSelection(c);
-                    this.columns.addColumnSelection(c);
-                }
-                this.render();
-            }
-            return;
-        }
-
-        if (this.mouseDown && this.headerDragType === 'row') {
-            const row = this.getRowAtPosition(y);
-            if (row >= 0 && row !== this.headerDragCurrent) {
-                this.headerDragCurrent = row;
-                if (!this.headerDragCtrl) {
-                    this.selectionManager.resetSelections();
-                    this.clearRowSelection();
-                    this.rows.removeAllRowSelections();
-                }
-                const start = Math.min(this.headerDragStart, row);
-                const end = Math.max(this.headerDragStart, row);
-                for (let r = start; r <= end; r++) {
-                    this.selectionManager.addRowSelection(r);
-                    this.rows.addRowSelection(r);
-                }
-                this.render();
-            }
-            return;
-        }
-
-        if (this.mouseDown && this.resizing && !this.headerDragType) {
-            this.handleResize(x, y);
-            return;
-        }
-
-        if (this.mouseDown && this.dragStart) {
-            const cell = this.getCellAtPosition(x, y);
-            if (cell) {
-                this.selectionManager.addRangeSelection(this.dragStart.row, this.dragStart.col, cell.row, cell.col);
-                this.render();
-            }
-        }
-
-        // Update cursor
-        this.updateCursor(x, y);
-    }
-
-    /**
-     * Handles mouse up events to finalize selection or resizing.
-     * @param {MouseEvent} e
-     */
-    handleMouseUp(e) {
-        this.mouseDown = false;
-        this.dragStart = null;
-        this.headerDragType = null;
-        this.headerDragStart = null;
-        this.headerDragCurrent = null;
-
-        if (this.resizing) {
-            if (this.resizeType === 'col') {
-                const finalWidth = this.columns.getColumnWidth(this.resizeInitialIndex);
-                if (finalWidth !== this.resizeInitialValue) {
-                    const command = new ResizeColumnCommand(
-                        this, this.resizeInitialIndex, finalWidth, this.resizeInitialValue
-                    );
-                    this.commandManager.executeCommand(command);
-                }
-            } else if (this.resizeType === 'row') {
-                const finalHeight = this.rows.getRowHeight(this.resizeInitialIndex);
-                if (finalHeight !== this.resizeInitialValue) {
-                    const command = new ResizeRowCommand(
-                        this, this.resizeInitialIndex, finalHeight, this.resizeInitialValue
-                    );
-                    this.commandManager.executeCommand(command);
-                }
-            }
-        }
-        this.resizing = false;
-        this.resizeType = null;
-        this.resizeIndex = -1;
-        this.resizeInitialValue = null;
-        this.resizeInitialIndex = null;
-        this.canvas.style.cursor = 'cell';
-
-        // Update cursor based on current position
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        this.updateCursor(x, y);
-    }
-
-    /**
-     * Handles click events for cell selection and editing.
-     * @param {MouseEvent} e
-     */
-    handleDoubleClick(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        const cell = this.getCellAtPosition(x, y);
-        if (cell) {
-            if (!e.ctrlKey) {
-                this.selectionManager.resetSelections();
-                this.clearAllSelection();
-            }
-            this.lastSelectedCell = cell; // <--- Track last selected cell
-            this.startEditing(cell.row, cell.col);
-            this.highlightCellHeaders(cell.row, cell.col);
-        }
-    }
-
-    /**
-     * Handles wheel events for scrolling and zooming.
-     * @param {WheelEvent} e
-     */
-    handleWheel(e) {
-        e.preventDefault();
-
-        const scrollSpeed = 50;
-        let zoomLevel = 1;
-
-        if (e.shiftKey) {
-            // Horizontal scroll when shift is held
-            this.scrollX = Math.max(0, this.scrollX + e.deltaY);
-        }
-        else {
-            // Normal vertical scroll
-            if (e.deltaX !== 0) {
-                // Native horizontal scroll (trackpad)
-                this.scrollX = Math.max(0, this.scrollX + e.deltaX);
-            }
-            if (e.deltaY !== 0) {
-                this.scrollY = Math.max(0, this.scrollY + e.deltaY);
-            }
-        }
-
-        this.render();
-    }
-
-    insertRowUp() {
-        let startRow = this.selection.startRow;
-        this.rows.insertRowUp(startRow);
-    }
-
-    /**
-     * Checks if mouse is near a row/column edge for resizing.
-     * Sets internal flags and cursor if matched.
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean}
-     */
-    checkResizeHandle(x, y) {
-        // Only allow resizing in headers
-
-        // Check column resize - only in column header area
-        if (y >= 0 && y <= this.colHeaderHeight && x > this.rowHeaderWidth) {
+        // Clamp column
+        if (x < this.rowHeaderWidth) {
+            col = 0;
+        } else {
             let currentX = this.rowHeaderWidth - this.scrollX;
             for (let i = 0; i < this.columns.noOfColumns; i++) {
                 const columnWidth = this.columns.getColumnWidth(i);
-                currentX += columnWidth;
-
-                if (Math.abs(x - currentX) < 5 && currentX > this.rowHeaderWidth) {
-                    this.resizeType = 'col';
-                    this.resizeIndex = i;
-                    this.canvas.style.cursor = 'e-resize';
-                    return true;
+                if (x >= currentX && x < currentX + columnWidth) {
+                    col = i;
+                    break;
                 }
-
-                if (currentX > this.canvas.width) break;
+                currentX += columnWidth;
             }
+            if (col === -1) col = this.columns.noOfColumns - 1; // Clamp to last column
         }
 
-        // Check row resize - only in row header area
-        if (x >= 0 && x <= this.rowHeaderWidth && y > this.colHeaderHeight) {
+        // Clamp row
+        if (y < this.colHeaderHeight) {
+            row = 0;
+        } else {
             let currentY = this.colHeaderHeight - this.scrollY;
             for (let i = 0; i < this.rows.noOfRows; i++) {
                 const rowHeight = this.rows.getRowHeight(i);
-                currentY += rowHeight;
-
-                if (Math.abs(y - currentY) < 5 && currentY > this.colHeaderHeight) {
-                    this.resizeType = 'row';
-                    this.resizeIndex = i;
-                    this.canvas.style.cursor = 'n-resize';
-                    return true;
+                if (y >= currentY && y < currentY + rowHeight) {
+                    row = i;
+                    break;
                 }
-
-                if (currentY > this.canvas.height) break;
+                currentY += rowHeight;
             }
+            if (row === -1) row = this.rows.noOfRows - 1; // Clamp to last row
         }
 
-        return false;
-    }
-
-    /**
-    * Handles the actual resize of row or column and triggers undoable command.
-    * @param {number} x - Current mouse x position.
-    * @param {number} y - Current mouse y position.
-    */
-    handleResize(x, y) {
-        if (this.resizeType === 'col') {
-            const startX = this.getColumnPosition(this.resizeIndex);
-            const newWidth = Math.max(20, x - startX);
-            this.columns.setColumnWidth(this.resizeIndex, newWidth); // Just update visually
-            this.render();
-        } else if (this.resizeType === 'row') {
-            const startY = this.getRowPosition(this.resizeIndex);
-            const newHeight = Math.max(15, y - startY);
-            this.rows.setRowHeight(this.resizeIndex, newHeight); // Just update visually
-            this.render();
-        }
-    }
-
-    /**
-     * Updates the mouse cursor to show resize handles where applicable.
-     * @param {number} x
-     * @param {number} y
-     */
-    updateCursor(x, y) {
-        // Reset cursor first
-        this.canvas.style.cursor = 'cell';
-
-        // Only show resize cursor in header areas
-        if ((y > 0 && y <= this.colHeaderHeight && x > this.rowHeaderWidth) ||
-            (x > 0 && x <= this.rowHeaderWidth && y > this.colHeaderHeight)) {
-            this.checkResizeHandle(x, y);
-        }
+        return (row >= 0 && col >= 0) ? { row, col } : null;
     }
 
     /**
@@ -954,28 +428,6 @@ export class ExcelGrid {
             currentY += rowHeight;
         }
         return -1;
-    }
-
-    /**
-     * Clears all row and column selections.
-     */
-    clearAllSelection() {
-        this.clearRowSelection();
-        this.clearColumnSelection();
-    }
-
-    /**
-     * Deselects all rows.
-     */
-    clearRowSelection() {
-        this.rows.removeAllRowSelections();
-    }
-
-    /**
-     * Deselects all columns.
-     */
-    clearColumnSelection() {
-        this.columns.removeAllColumnSelections();
     }
 
     /**
@@ -1046,7 +498,6 @@ export class ExcelGrid {
 
         const oldValue = this.getCellValue(this.editingCell.row, this.editingCell.col);
         const newValue = this.cellEditor.value;
-        console.log(oldValue)
         if (oldValue !== newValue) {
             const command = new SetCellValueCommand(
                 this, this.editingCell.row, this.editingCell.col, newValue, oldValue

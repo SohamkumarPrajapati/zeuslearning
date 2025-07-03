@@ -8,7 +8,6 @@ export class Rows {
     constructor(count) {
         this.noOfRows = count;
         this.alteredRows = new Map(); // stores the altered height of the row from default height in form of row index and height
-        this.selectedRows = new Set();  // stores the selected rows in form of row index
     }
 
     /**
@@ -46,50 +45,6 @@ export class Rows {
     }
 
     /**
-     * Adds a row to the set of selected rows.
-     * @param {number} rowIndex - The index of the row to select.
-     * @throws Will throw an error if the row index is out of bounds.
-     */
-    addRowSelection(rowIndex) {
-        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
-            throw new Error("Row index out of bounds");
-        }
-        this.selectedRows.add(rowIndex);
-    }
-
-    /**
-     * Removes a row from the set of selected rows.
-     * @param {number} rowIndex - The index of the row to deselect.
-     * @throws Will throw an error if the row index is out of bounds.
-     */
-    removeRowSelection(rowIndex) {
-        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
-            throw new Error("Row index out of bounds");
-        }
-        this.selectedRows.delete(rowIndex);
-    }
-
-    /**
-     * Removes all row selections.
-     */
-    removeAllRowSelections() {
-        this.selectedRows.clear(); // clear all selected rows
-    }
-
-    /**
-     * Checks if a row is selected.
-     * @param {number} rowIndex - The index of the row.
-     * @returns {boolean} True if the row is selected, false otherwise.
-     * @throws Will throw an error if the row index is out of bounds.
-     */
-    isRowSelected(rowIndex) {
-        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
-            throw new Error("Row index out of bounds");
-        }
-        return this.selectedRows.has(rowIndex);
-    }
-
-    /**
      * Inserts a new row above the specified row index.
      * Shifts altered row heights and selected rows accordingly.
      * @param {number} rowIndex - The index above which to insert the new row.
@@ -113,17 +68,6 @@ export class Rows {
             }
         }
         this.alteredRows = newAlteredRows;
-
-        // Shift selectedRows for rows >= rowIndex
-        const newSelectedRows = new Set();
-        for (const idx of this.selectedRows) {
-            if (idx >= rowIndex) {
-                newSelectedRows.add(idx + 1);
-            } else {
-                newSelectedRows.add(idx);
-            }
-        }
-        this.selectedRows = newSelectedRows;
     }
 
     /**
@@ -150,16 +94,14 @@ export class Rows {
             }
         }
         this.alteredRows = newAlteredRows;
+    }
 
-        // Shift selectedRows for rows > rowIndex
-        const newSelectedRows = new Set();
-        for (const idx of this.selectedRows) {
-            if (idx > rowIndex) {
-                newSelectedRows.add(idx + 1);
-            } else {
-                newSelectedRows.add(idx);
-            }
+    deleteRow(rowIndex) {
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
+            throw new Error("Row index out of bounds");
         }
-        this.selectedRows = newSelectedRows;
+
+        //decrese the row count
+        this.noOfRows--;
     }
 }

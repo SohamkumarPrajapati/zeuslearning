@@ -83,4 +83,17 @@ export class Cells {
         }
         this.cells = newCells;
     }
+
+    deleteCellsOnRow(rowIndex) {
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
+            throw new Error("Row index out of bounds");
+        }
+        
+    }
+
+    deleteCellsOnColumn(colIndex) {
+        if (colIndex < 0 || colIndex >= this.noOfColumns) {
+            throw new Error("Column index out of bounds");
+        }
+    }
 }

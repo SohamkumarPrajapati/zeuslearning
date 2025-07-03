@@ -10,7 +10,6 @@ export class Columns {
     constructor(count) {
         this.noOfColumns = count;
         this.alteredWidths = new Map(); // stores the altered width of the column from default width in form of column index and width
-        this.selectedColumns = new Set();  // stores the selected columns in form of column index
     }
 
     /**
@@ -45,50 +44,6 @@ export class Columns {
             throw new Error("Column index out of bounds");
         }
         return this.alteredWidths.get(columnIndex) || DEFAULT_COLUMN_WIDTH;
-    }
-
-    /**
-     * Adds a column to the set of selected columns.
-     * @param {number} columnIndex - The index of the column to select.
-     * @throws Will throw an error if the column index is out of bounds.
-     */
-    addColumnSelection(columnIndex) {
-        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
-            throw new Error("Column index out of bounds");
-        }
-        this.selectedColumns.add(columnIndex);
-    }
-
-    /**
-     * Removes a column from the set of selected columns.
-     * @param {number} columnIndex - The index of the column to deselect.
-     * @throws Will throw an error if the column index is out of bounds.
-     */
-    removeColumnSelection(columnIndex) {
-        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
-            throw new Error("Column index out of bounds");
-        }
-        this.selectedColumns.delete(columnIndex);
-    }
-
-    /**
-     * Removes all column selections.
-     */
-    removeAllColumnSelections() {
-        this.selectedColumns.clear(); // clear all selected columns
-    }
-
-    /**
-     * Checks if a column is selected.
-     * @param {number} columnIndex - The index of the column.
-     * @returns {boolean} True if the column is selected, false otherwise.
-     * @throws Will throw an error if the column index is out of bounds.
-     */
-    isColumnSelected(columnIndex) {
-        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
-            throw new Error("Column index out of bounds");
-        }
-        return this.selectedColumns.has(columnIndex);
     }
 
     /**
@@ -135,17 +90,6 @@ export class Columns {
             }
         }
         this.alteredWidths = newAlteredWidths;
-
-        // Shift selectedColumns for columns >= colIndex
-        const newSelectedColumns = new Set();
-        for (const idx of this.selectedColumns) {
-            if (idx >= colIndex) {
-                newSelectedColumns.add(idx + 1);
-            } else {
-                newSelectedColumns.add(idx);
-            }
-        }
-        this.selectedColumns = newSelectedColumns;
     }
 
     /**
@@ -172,17 +116,15 @@ export class Columns {
             }
         }
         this.alteredWidths = newAlteredWidths;
+    }
 
-        // Shift selectedColumns for columns > colIndex
-        const newSelectedColumns = new Set();
-        for (const idx of this.selectedColumns) {
-            if (idx > colIndex) {
-                newSelectedColumns.add(idx + 1);
-            } else {
-                newSelectedColumns.add(idx);
-            }
+    deleteColumn(colIndex) {
+        if (colIndex < 0 || colIndex >= this.noOfColumns) {
+            throw new Error("Column index out of bounds");
         }
-        this.selectedColumns = newSelectedColumns;
+
+        //decrese the column count
+        this.noOfColumns--;
     }
 
 
