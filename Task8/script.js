@@ -1,4 +1,4 @@
-import { ExcelGrid } from "./ExcelGrid.js";
+import { ExcelGrid } from "./modules/ExcelGrid.js";
 
 
 document.body.innerHTML = "";

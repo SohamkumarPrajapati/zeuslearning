@@ -1,3 +1,5 @@
+import { ExcelGrid } from "./ExcelGrid.js";
+
 /**
  * Base class for all command operations (used in undo/redo pattern).
  */
@@ -38,14 +40,14 @@ export class SetCellValueCommand extends Command {
      * Executes the cell value change.
      */
     execute() {
-        this.grid.setCellValue(this.row, this.col, this.newValue);
+        this.grid.cells.setCellValue(this.row, this.col, this.newValue);
     }
 
     /**
      * Reverts the cell value to the old value.
      */
     undo() {
-        this.grid.setCellValue(this.row, this.col, this.oldValue);
+        this.grid.cells.setCellValue(this.row, this.col, this.oldValue);
     }
 }
 
@@ -72,14 +74,14 @@ export class ResizeColumnCommand extends Command {
      * Applies the new column width.
      */
     execute() {
-        this.grid.setColumnWidth(this.colIndex, this.newWidth);
+        this.grid.columns.setColumnWidth(this.colIndex, this.newWidth);
     }
 
     /**
      * Restores the original column width.
      */
     undo() {
-        this.grid.setColumnWidth(this.colIndex, this.oldWidth);
+        this.grid.columns.setColumnWidth(this.colIndex, this.oldWidth);
     }
 }
 
@@ -106,14 +108,109 @@ export class ResizeRowCommand extends Command {
      * Applies the new row height.
      */
     execute() {
-        this.grid.setRowHeight(this.rowIndex, this.newHeight);
+        this.grid.rows.setRowHeight(this.rowIndex, this.newHeight);
     }
 
     /**
      * Restores the original row height.
      */
     undo() {
-        this.grid.setRowHeight(this.rowIndex, this.oldHeight);
+        this.grid.rows.setRowHeight(this.rowIndex, this.oldHeight);
+    }
+}
+
+/**
+ * Command to insert the row in the canvas
+ */
+export class InsertRowCommand extends Command {
+    /**
+     * initialize the insertRowCommand
+     * @param {ExcelGrid} grid 
+     * @param {number} rowIndex 
+     * @param {string} direction - in which side you want to add the row up or down to rowIndex row
+     */
+    constructor(grid, rowIndex, direction = 'up') {
+        super();
+        this.grid = grid;
+        this.rowIndex = rowIndex;
+        this.direction = direction; // 'up' or 'down'
+    }
+ 
+    /**
+     * insert the new row and perform related logic
+     */
+    execute() {
+        if (this.direction === 'up') {
+            this.grid.cells.shiftCellsToNextRow(this.rowIndex);
+            this.grid.rows.insertRowUp(this.rowIndex);
+        } else {
+            this.grid.cells.shiftCellsToNextRow(this.rowIndex + 1);
+            this.grid.rows.insertRowDown(this.rowIndex);
+        }
+        this.grid.render();
+    }
+
+    /**
+     * undo the previous row insertion by deleting it
+     */
+    undo() {
+        // Remove the inserted row
+        if (this.direction === 'up') {
+            this.grid.rows.deleteRow(this.rowIndex);
+            this.grid.cells.deleteCellsOnRow(this.rowIndex);
+        } else {
+            this.grid.rows.deleteRow(this.rowIndex + 1);
+            this.grid.cells.deleteCellsOnRow(this.rowIndex + 1);
+        }
+        this.grid.render();
+    }
+}
+
+
+/**
+ * command for inserting the column in canvas
+ */
+export class InsertColumnCommand extends Command {
+    /**
+     * 
+     * @param {ExcelGrid} grid 
+     * @param {number} colIndex 
+     * @param {string} direction - in which way to selected column you want to add the new column left or right to selected column
+     */
+    constructor(grid, colIndex, direction = 'left') {
+        super();
+        this.grid = grid;
+        this.colIndex = colIndex;
+        this.direction = direction; // 'left' or 'right'
+    }
+
+    /**
+     * executes the insertColumn command and inserts the new column on position based on variable direction
+     */
+    execute() {
+        if (this.direction === 'left') {
+            this.grid.cells.shiftCellsToNextColumn(this.colIndex);
+            this.grid.columns.insertColumnLeft(this.colIndex);
+        } else {
+            this.grid.cells.shiftCellsToNextColumn(this.colIndex + 1);
+            this.grid.columns.insertColumnRight(this.colIndex);
+        }
+        this.grid.render();
+    }
+
+    /**
+     * deletes the last inserted column and update the remaining column logic
+     */
+    undo() {
+        // Remove the inserted column
+        if (this.direction === 'left') {
+            this.grid.columns.deleteColumn(this.colIndex);
+            this.grid.cells.deleteCellsOnColumn(this.colIndex);
+        } else {
+            this.grid.columns.deleteColumn(this.colIndex + 1);
+            this.grid.cells.deleteCellsOnColumn(this.colIndex + 1);
+        }
+        this.grid.render();
     }
 }
 

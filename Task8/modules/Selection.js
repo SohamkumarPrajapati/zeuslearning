@@ -98,7 +98,7 @@ export class Selection {
         const cells = [];
         for (let r = this.startRow; r <= this.endRow; r++) {
             for (let c = this.startCol; c <= this.endCol; c++) {
-                if (grid.isValidCell(r, c)) {
+                if (grid.cells.isValidCell(r, c)) {
                     cells.push({ row: r, col: c, value: grid.getCellValue(r, c) });
                 }
             }
@@ -132,14 +132,14 @@ export class Selection {
             if(drawBorders){grid.ctx.strokeRect(x, y, width, height);}
         }
 
-        // if (this.type !== 'row' && this.type !== 'column') {
-        //     for (let i = this.startCol; i <= this.endCol; i++) {
-        //         grid.highlightCellHeaders(this.startRow, i);
-        //     }
-        //     for (let i = this.startRow; i <= this.endRow; i++) {
-        //         grid.highlightCellHeaders(i, this.startCol);
-        //     }
-        // }
+        if (this.type !== 'row' && this.type !== 'column') {
+            for (let i = this.startCol; i <= this.endCol; i++) {
+                grid.highlightCellHeaders(this.startRow, i);
+            }
+            for (let i = this.startRow; i <= this.endRow; i++) {
+                grid.highlightCellHeaders(i, this.startCol);
+            }
+        }
 
         if (this.type === 'row') {
             grid.insertRowUpBtn.disabled = false;
@@ -265,17 +265,17 @@ export class SelectionManager {
         for (let selection of this.selections.values()) {
             for (let r = selection.startRow; r <= selection.endRow; r++) {
                 for (let c = selection.startCol; c <= selection.endCol; c++) {
-                    if (grid.isValidCell(r, c)) {
-                        cells.push({ row: r, col: c, value: grid.getCellValue(r, c) });  // HERE CELLS WITH ROW OR COLUMN SELECTION WILL NOT BE INCLUDED
+                    if (grid.cells.isValidCell(r, c)) {
+                        cells.push({ row: r, col: c, value: grid.cells.getCellValue(r, c) });  // HERE CELLS WITH ROW OR COLUMN SELECTION WILL NOT BE INCLUDED
                     }
                     else if (r == -1) {
                         for (let ro = 0; ro < grid.rows.noOfRows; ro++) {
-                            cells.push({ row: ro, col: c, value: grid.getCellValue(ro, c) });
+                            cells.push({ row: ro, col: c, value: grid.cells.getCellValue(ro, c) });
                         }
                     }
                     else if (c == -1) {
                         for (let co = 0; co < grid.columns.noOfColunns; co++) {
-                            cells.push({ row: r, col: co, value: grid.getCellValue(r, co) });
+                            cells.push({ row: r, col: co, value: grid.cells.getCellValue(r, co) });
                         }
                     }
                 }

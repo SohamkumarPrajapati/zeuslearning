@@ -1,10 +1,3 @@
-// ==========================
-// Module Imports
-// ==========================
-
-/**
- * Import required classes from separate modules.
- */
 import { Cells } from './Cells.js';
 import { Rows } from './Rows.js';
 import { Columns } from './Columns.js';
@@ -13,9 +6,7 @@ import { SetCellValueCommand, CommandManager } from './CommandManager.js';
 import { MAX_COLS, MAX_ROWS } from './Constants.js';
 import { EventHandler } from './EventHandler.js';
 
-// ==========================
-// ExcelGrid Class
-// ==========================
+
 
 /**
  * Main class representing the Excel-like grid component.
@@ -44,15 +35,14 @@ export class ExcelGrid {
         this.cellEditor = document.getElementById('cellEditor');
         this.editingCell = null;
 
-        
+
         //Row Column Insertion
         this.insertRowUpBtn = document.getElementById('insertRowUpBtn');
         this.insertRowDownBtn = document.getElementById('insertRowDownBtn');
         this.insertColumnLeftBtn = document.getElementById('insertColumnLeftBtn');
         this.insertColumnRightBtn = document.getElementById('insertColumnRightBtn');
-        
+
         this.initializeCanvas();
-        // Eventhandler initialization
         this.eventHandler = new EventHandler(this);
         this.render();
     }
@@ -68,58 +58,7 @@ export class ExcelGrid {
         this.ctx.scale(dpr, dpr);
     }
 
-    
 
-    /**
-     * Gets a cell's value.
-     * @param {number} row - Row index.
-     * @param {number} col - Column index.
-     * @returns {string}
-     */
-    getCellValue(row, col) {
-        if (!this.isValidCell(row, col)) return '';
-        return this.cells.getCellValue(row, col);
-    }
-
-    /**
-     * Sets a cell's value.
-     * @param {number} row - Row index.
-     * @param {number} col - Column index.
-     * @param {string} value - Value to set.
-     */
-    setCellValue(row, col, value) {
-        if (!this.isValidCell(row, col)) return;
-        this.cells.setCellValue(row, col, value);
-    }
-
-    /**
-     * Validates whether given cell indices are within bounds.
-     * @param {number} row
-     * @param {number} col
-     * @returns {boolean}
-     */
-    isValidCell(row, col) {
-        return row >= 0 && row < this.rows.noOfRows && col >= 0 && col < this.columns.noOfColumns;
-    }
-
-    /**
-     * Sets a column's width.
-     * @param {number} colIndex
-     * @param {number} width
-     */
-    setColumnWidth(colIndex, width) {
-        this.columns.setColumnWidth(colIndex, width);
-        // this.render();
-    }
-    /**
-     * Sets a row's height.
-     * @param {number} rowIndex
-     * @param {number} height
-     */
-    setRowHeight(rowIndex, height) {
-        this.rows.setRowHeight(rowIndex, height);
-        // this.render();
-    }
     /**
      * Gets the X pixel position of a column.
      * @param {number} colIndex
@@ -133,6 +72,8 @@ export class ExcelGrid {
         }
         return x;
     }
+
+
     /**
      * Gets the Y pixel position of a row.
      * @param {number} rowIndex
@@ -146,6 +87,8 @@ export class ExcelGrid {
         }
         return y;
     }
+
+
     /**
      * Converts screen x/y to cell {row, col} object.
      * @param {number} x
@@ -195,14 +138,15 @@ export class ExcelGrid {
         this.drawGridCells();
         this.drawColumnHeader();
         this.drawRowHeader();
-        this.drawTopLeftCorner();
         this.drawSelection();
+        this.drawTopLeftCorner();
 
         if (this.editingCell) {
             this.stopEditing();
         }
         this.updateStats();
     }
+
 
     /**
      * drawing the grid cells on the canvas
@@ -225,13 +169,13 @@ export class ExcelGrid {
 
                 this.ctx.beginPath();
                 this.ctx.strokeStyle = 'grey';
-                this.ctx.moveTo(x, y);                   // Top
-                this.ctx.lineTo(x + colWidth, y);
+                this.ctx.moveTo(x, y - 0.5);                   // Top
+                this.ctx.lineTo(x + colWidth, y - 0.5);
                 this.ctx.moveTo(x + colWidth, y);           // Right
                 this.ctx.lineTo(x + colWidth, y + this.rows.getRowHeight(rowIterator));
                 this.ctx.stroke();
 
-                const value = this.getCellValue(rowIterator, columnIteartor);
+                const value = this.cells.getCellValue(rowIterator, columnIteartor);
                 if (value) {
                     this.ctx.fillStyle = '#2c3e50';
                     this.ctx.font = '14px Arial';
@@ -246,6 +190,7 @@ export class ExcelGrid {
 
         }
     }
+
 
     /**
      * drawing the header section of the columns
@@ -269,13 +214,14 @@ export class ExcelGrid {
             this.ctx.stroke();
 
             this.ctx.fillStyle = (this.selectionManager.isColumnSelected(iterationIndex)) ? 'white' : '#616161';
-            this.ctx.font = '18px Arial';
+            this.ctx.font = '15px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText(this.columns.getColumnName(iterationIndex) || '', x + colWidth / 2, y + this.colHeaderHeight / 2);
             x += colWidth;
             iterationIndex++;
         }
     }
+
 
     /**
      * drawing the header section for rows
@@ -292,10 +238,10 @@ export class ExcelGrid {
             this.ctx.fillRect(x, y, this.rowHeaderWidth, rowHeight);
 
             this.ctx.beginPath();
-            this.ctx.moveTo(x, y);                  // Left
-            this.ctx.lineTo(x, y + rowHeight);
-            this.ctx.moveTo(x, y + rowHeight);         // Bottom
+            this.ctx.moveTo(x + this.rowHeaderWidth, y - 0.5);                  // Right
             this.ctx.lineTo(x + this.rowHeaderWidth, y + rowHeight);
+            this.ctx.moveTo(x, y - 0.5 + rowHeight);         // Bottom
+            this.ctx.lineTo(x + this.rowHeaderWidth, y - 0.5 + rowHeight);
             this.ctx.stroke();
 
             this.ctx.fillStyle = this.selectionManager.isRowSelected(iterationIndex) ? 'white' : '#616161';
@@ -307,15 +253,39 @@ export class ExcelGrid {
         }
     }
 
+
     /**
-     * drawing top-right corner cell
+     * Draws the top-left corner cell, styled like real Excel (with right/bottom border and a triangle at bottom-right, not touching the borders).
      */
     drawTopLeftCorner() {
-        let x = 0;
-        let y = 0;
+        const x = 0;
+        const y = 0;
+        const width = this.rowHeaderWidth + 1;
+        const height = this.colHeaderHeight + 1.2;
+
         this.ctx.fillStyle = '#e0e0e0';
-        this.ctx.fillRect(x, y, this.rowHeaderWidth, this.colHeaderHeight);
+        this.ctx.fillRect(x, y, width, height);
+
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = '#bdbdbd';
+        this.ctx.lineWidth = 2;
+        this.ctx.moveTo(x + width, y);
+        this.ctx.lineTo(x + width, y + height + 1);
+        this.ctx.moveTo(x, y + height);
+        this.ctx.lineTo(x + width, y + height);
+        this.ctx.stroke();
+
+        const triangleSize = 10;
+        const inset = 4;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + width - inset, y + height - inset); // Bottom right, inset
+        this.ctx.lineTo(x + width - inset - triangleSize, y + height - inset); // Left along bottom, inset
+        this.ctx.lineTo(x + width - inset, y + height - inset - triangleSize); // Up along right, inset
+        this.ctx.closePath();
+        this.ctx.fillStyle = '#bdbdbd';
+        this.ctx.fill();
     }
+
 
     /**
      * Draws the current selection rectangle on the canvas.
@@ -329,6 +299,7 @@ export class ExcelGrid {
             selection.drawSelection(this);
         }
     }
+
 
     /**
      * Updates the statistics display based on the current selection.
@@ -356,6 +327,7 @@ export class ExcelGrid {
 
         stats.textContent = `Count: ${cells.length} | Sum: ${sum.toFixed(2)} | Avg: ${avg.toFixed(2)} | Min: ${min} | Max: ${max}`;
     }
+
 
     getCellAtPositionClamped(x, y) {
         // Clamp x/y to the grid area
@@ -396,6 +368,7 @@ export class ExcelGrid {
         return (row >= 0 && col >= 0) ? { row, col } : null;
     }
 
+
     /**
      * Returns the column index at a given x coordinate.
      * @param {number} x
@@ -412,6 +385,7 @@ export class ExcelGrid {
         }
         return -1;
     }
+
 
     /**
      * Returns the row index at a given y-coordinate.
@@ -430,6 +404,7 @@ export class ExcelGrid {
         return -1;
     }
 
+
     /**
      * Begins editing the specified cell by showing the input editor.
      * @param {number} row - Row index of the cell.
@@ -437,7 +412,7 @@ export class ExcelGrid {
      */
     startEditing(row, col) {
         this.editingCell = { row, col };
-        const value = this.getCellValue(row, col);
+        const value = this.cells.getCellValue(row, col);
 
         const x = this.getColumnPosition(col);
         const y = this.getRowPosition(row);
@@ -455,6 +430,7 @@ export class ExcelGrid {
         this.cellEditor.focus();
         // this.cellEditor.select();
     }
+
 
     /**
      * highlight the selected cells row header cell and column header cell
@@ -490,13 +466,14 @@ export class ExcelGrid {
 
     }
 
+
     /**
      * Stops editing and applies changes using a command (for undo/redo support).
      */
     stopEditing() {
         if (!this.editingCell) return;
 
-        const oldValue = this.getCellValue(this.editingCell.row, this.editingCell.col);
+        const oldValue = this.cells.getCellValue(this.editingCell.row, this.editingCell.col);
         const newValue = this.cellEditor.value;
         if (oldValue !== newValue) {
             const command = new SetCellValueCommand(
@@ -510,6 +487,7 @@ export class ExcelGrid {
         this.render();
     }
 
+
     /**
      * Cancels editing without saving any changes.
      */
@@ -517,6 +495,7 @@ export class ExcelGrid {
         this.cellEditor.style.display = 'none';
         this.editingCell = null;
     }
+
 
     /**
      * Loads data from a JSON file and populates the grid.
@@ -544,7 +523,7 @@ export class ExcelGrid {
             // Set column headers
             for (let i = 0; i < headers.length; i++) {
                 const value = headers[i];
-                this.setCellValue(0, i, value !== undefined ? value.toUpperCase() : '');
+                this.cells.setCellValue(0, i, value !== undefined ? value.toUpperCase() : '');
             }
 
             // Load data
@@ -553,7 +532,7 @@ export class ExcelGrid {
                 const record = data[recordCount++];
                 for (let colIndex = 0; colIndex < headers.length && colIndex < this.columns.noOfColumns; colIndex++) {
                     const value = record[headers[colIndex]];
-                    this.setCellValue(rowIndex, colIndex, value !== undefined ? value : '');
+                    this.cells.setCellValue(rowIndex, colIndex, value !== undefined ? value : '');
                 }
             }
 

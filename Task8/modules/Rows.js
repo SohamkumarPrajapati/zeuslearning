@@ -96,12 +96,30 @@ export class Rows {
         this.alteredRows = newAlteredRows;
     }
 
+    /**
+     * delete the row with the index rowIndex from canvas
+     * @param {number} rowIndex 
+     */
     deleteRow(rowIndex) {
-        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
-            throw new Error("Row index out of bounds");
-        }
-
-        //decrese the row count
-        this.noOfRows--;
+    if (rowIndex < 0 || rowIndex >= this.noOfRows) {
+        throw new Error("Row index out of bounds");
     }
+
+    // Decrease the row count
+    this.noOfRows--;
+
+    this.alteredHeights?.delete(rowIndex);
+
+    if (this.alteredHeights) {
+        const newAlteredHeights = new Map();
+        for (const [idx, height] of this.alteredHeights.entries()) {
+            if (idx > rowIndex) {
+                newAlteredHeights.set(idx - 1, height);
+            } else if (idx < rowIndex) {
+                newAlteredHeights.set(idx, height);
+            }
+        }
+        this.alteredHeights = newAlteredHeights;
+    }
+}
 }

@@ -118,13 +118,32 @@ export class Columns {
         this.alteredWidths = newAlteredWidths;
     }
 
+
+    /**
+     * deletes the column with column index from the canvas
+     * @param {number} colIndex 
+     */
     deleteColumn(colIndex) {
         if (colIndex < 0 || colIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
         }
 
-        //decrese the column count
+        // Decrease the column count
         this.noOfColumns--;
+
+        // Remove altered width for the deleted column
+        this.alteredWidths.delete(colIndex);
+
+        // Shift alteredWidths for columns > colIndex
+        const newAlteredWidths = new Map();
+        for (const [idx, width] of this.alteredWidths.entries()) {
+            if (idx > colIndex) {
+                newAlteredWidths.set(idx - 1, width);
+            } else if (idx < colIndex) {
+                newAlteredWidths.set(idx, width);
+            }
+        }
+        this.alteredWidths = newAlteredWidths;
     }
 
 

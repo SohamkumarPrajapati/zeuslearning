@@ -1,6 +1,11 @@
 import { ResizeColumnCommand, ResizeRowCommand } from './CommandManager.js';
+import { InsertRowCommand, InsertColumnCommand } from './CommandManager.js';
 
 export class EventHandler {
+    /**
+     * initialize the events and handle it for passed grid
+     * @param {ExcelGrid} grid 
+     */
     constructor(grid) {
         this.grid = grid;
 
@@ -18,9 +23,6 @@ export class EventHandler {
         this.resizeInitialValue = null; // initial width or height
         this.resizeInitialIndex = null; // index of column/row being resized
         this.lastSelectedCell = null;
-        this.autoScrollInterval = null;
-        this.autoScrollDirection = null; // 'left', 'right', 'up', 'down'
-        this.autoScrollType = null;
 
         this.setupKeyboardListeners();
         this.setupEventListeners();
@@ -121,63 +123,53 @@ export class EventHandler {
 
         this.grid.insertRowUpBtn.addEventListener('click', () => {
             let selections = this.grid.selectionManager.selections;
-
             for (let selection of selections.values()) {
-                if (selection.type !== 'row') {
-                    continue;
-                }
+                if (selection.type !== 'row') continue;
                 let startRow = selection.startRow;
-                this.grid.cells.shiftCellsToNextRow(startRow);
-                this.grid.rows.insertRowUp(startRow);
+                const command = new InsertRowCommand(this.grid, startRow, 'up');
+                this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addRowSelection(startRow + 1);
                 this.grid.render();
                 break;
             }
         });
+
         this.grid.insertRowDownBtn.addEventListener('click', () => {
             let selections = this.grid.selectionManager.selections;
-
             for (let selection of selections.values()) {
-                if (selection.type !== 'row') {
-                    continue;
-                }
+                if (selection.type !== 'row') continue;
                 let startRow = selection.startRow;
-                this.grid.cells.shiftCellsToNextRow(startRow + 1);
-                this.grid.rows.insertRowDown(startRow);
+                const command = new InsertRowCommand(this.grid, startRow, 'down');
+                this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addRowSelection(startRow);
                 this.grid.render();
                 break;
             }
         });
+
         this.grid.insertColumnLeftBtn.addEventListener('click', () => {
             let selections = this.grid.selectionManager.selections;
-
             for (let selection of selections.values()) {
-                if (selection.type !== 'column') {
-                    continue;
-                }
+                if (selection.type !== 'column') continue;
                 let startCol = selection.startCol;
-                this.grid.cells.shiftCellsToNextColumn(startCol);
-                this.grid.columns.insertColumnLeft(startCol);
+                const command = new InsertColumnCommand(this.grid, startCol, 'left');
+                this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addColumnSelection(startCol + 1);
                 this.grid.render();
                 break;
             }
-
         });
+
         this.grid.insertColumnRightBtn.addEventListener('click', () => {
             let selections = this.grid.selectionManager.selections;
-
             for (let selection of selections.values()) {
-                if (selection.type !== 'column') {
-                    continue;
-                }
+                if (selection.type !== 'column') continue;
                 let startCol = selection.startCol;
-                this.grid.cells.shiftCellsToNextColumn(startCol + 1);
-                this.grid.columns.insertColumnRight(startCol);
+                const command = new InsertColumnCommand(this.grid, startCol, 'right');
+                this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addColumnSelection(startCol);
                 this.grid.render();
@@ -227,6 +219,8 @@ export class EventHandler {
         if (y < this.grid.colHeaderHeight && x > this.grid.rowHeaderWidth) {
             const col = this.grid.getColumnAtPosition(x);
             if (col >= 0) {
+                let row = 0;
+                this.lastSelectedCell = { row, col };
                 this.headerDragType = 'col';
                 this.headerDragStart = col;
                 this.headerDragCurrent = col;
@@ -246,6 +240,8 @@ export class EventHandler {
         if (x < this.grid.rowHeaderWidth && y > this.grid.colHeaderHeight) {
             const row = this.grid.getRowAtPosition(y);
             if (row >= 0) {
+                let col = 0;
+                this.lastSelectedCell = { row, col };
                 this.headerDragType = 'row';
                 this.headerDragStart = row;
                 this.headerDragCurrent = row;
@@ -281,61 +277,6 @@ export class EventHandler {
         const rect = this.grid.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-
-
-        // Auto-scroll logic for header drag
-        if (this.mouseDown && (this.headerDragType === 'col' || this.headerDragType === 'row')) {
-            let scrollNeeded = false;
-            let direction = null;
-
-            if (this.headerDragType === 'col') {
-                if (x > this.grid.canvas.width - 10) {
-                    scrollNeeded = true;
-                    direction = 'right';
-                } else if (x < this.grid.rowHeaderWidth + 10) {
-                    scrollNeeded = true;
-                    direction = 'left';
-                }
-            } else if (this.headerDragType === 'row') {
-                if (y > this.grid.canvas.height - 10) {
-                    scrollNeeded = true;
-                    direction = 'down';
-                } else if (y < this.grid.colHeaderHeight + 10) {
-                    scrollNeeded = true;
-                    direction = 'up';
-                }
-            }
-
-            if (scrollNeeded) {
-                this.startAutoScroll(direction);
-            } else {
-                this.stopAutoScroll();
-            }
-        }
-
-        // --- Auto-scroll logic for range (cell) selection ---
-        if (this.mouseDown && this.dragStart) {
-            let scrollNeeded = false;
-            let direction = null;
-            if (x > this.grid.canvas.width - 10) {
-                scrollNeeded = true;
-                direction = 'right';
-            } else if (x < this.grid.rowHeaderWidth + 10) {
-                scrollNeeded = true;
-                direction = 'left';
-            } else if (y > this.grid.canvas.height - 10) {
-                scrollNeeded = true;
-                direction = 'down';
-            } else if (y < this.grid.colHeaderHeight + 10) {
-                scrollNeeded = true;
-                direction = 'up';
-            }
-            if (scrollNeeded) {
-                this.startAutoScroll(direction, 'range');
-            } else {
-                this.stopAutoScroll('range');
-            }
-        }
 
         // --- Header drag selection logic ---
         if (this.mouseDown && this.headerDragType === 'col') {
@@ -399,7 +340,6 @@ export class EventHandler {
         this.headerDragType = null;
         this.headerDragStart = null;
         this.headerDragCurrent = null;
-        this.stopAutoScroll();
 
         if (this.resizing) {
             if (this.resizeType === 'col') {
@@ -565,89 +505,6 @@ export class EventHandler {
             this.checkResizeHandle(x, y);
         }
     }
-
-    startAutoScroll(direction, type = 'header') {
-        if (this.autoScrollInterval && this.autoScrollDirection === direction && this.autoScrollType === type) return;
-        this.stopAutoScroll();
-        this.autoScrollDirection = direction;
-        this.autoScrollType = type;
-        this.autoScrollInterval = setInterval(() => {
-            const scrollSpeed = 20;
-            if (direction === 'right') {
-                this.grid.scrollX += scrollSpeed;
-            } else if (direction === 'left') {
-                this.grid.scrollX = Math.max(0, this.grid.scrollX - scrollSpeed);
-            } else if (direction === 'down') {
-                this.grid.scrollY += scrollSpeed;
-            } else if (direction === 'up') {
-                this.grid.scrollY = Math.max(0, this.grid.scrollY - scrollSpeed);
-            }
-            // Update selection as we scroll
-            if (type === 'header') {
-                // ...existing header drag code...
-                if (this.headerDragType === 'col') {
-                    let col = this.grid.getColumnAtPosition(this.grid.canvas.width - 1);
-                    if (this.autoScrollDirection === 'left') {
-                        col = this.grid.getColumnAtPosition(this.grid.rowHeaderWidth);
-                    }
-                    if (col >= 0 && col !== this.headerDragCurrent) {
-                        this.headerDragCurrent = col;
-                        const start = Math.min(this.headerDragStart, col);
-                        const end = Math.max(this.headerDragStart, col);
-                        for (let c = start; c <= end; c++) {
-                            this.grid.selectionManager.addColumnSelection(c);
-                        }
-                        this.grid.render();
-                    }
-                } else if (this.headerDragType === 'row') {
-                    let row = this.grid.getRowAtPosition(this.grid.canvas.height - 1);
-                    if (this.autoScrollDirection === 'up') {
-                        row = this.grid.getRowAtPosition(this.grid.colHeaderHeight);
-                    }
-                    if (row >= 0 && row !== this.headerDragCurrent) {
-                        this.headerDragCurrent = row;
-                        const start = Math.min(this.headerDragStart, row);
-                        const end = Math.max(this.headerDragStart, row);
-                        for (let r = start; r <= end; r++) {
-                            this.grid.selectionManager.addRowSelection(r);
-                        }
-                        this.grid.render();
-                    }
-                }
-            } else if (type === 'range' && this.dragStart) {
-                // Range selection auto-scroll
-                let x = this.grid.canvas.width - 1;
-                let y = this.grid.canvas.height - 1;
-                if (this.autoScrollDirection === 'left') x = this.grid.rowHeaderWidth;
-                if (this.autoScrollDirection === 'up') y = this.grid.colHeaderHeight;
-                const cell = this.grid.getCellAtPositionClamped(x, y);
-                if (cell) {
-                    this.grid.selectionManager.addRangeSelection(this.dragStart.row, this.dragStart.col, cell.row, cell.col);
-                    this.grid.render();
-                }
-            }
-        }, 30);
-    }
-
-    stopAutoScroll(type) {
-        // If type is specified, only stop if it matches, else stop all
-        if (!type || this.autoScrollType === type) {
-            if (this.autoScrollInterval) {
-                clearInterval(this.autoScrollInterval);
-                this.autoScrollInterval = null;
-                this.autoScrollDirection = null;
-                this.autoScrollType = null;
-            }
-        }
-    }
-
-
-
-
-
-
-
-
 
 
 }

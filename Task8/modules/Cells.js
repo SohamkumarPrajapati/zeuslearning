@@ -11,6 +11,16 @@ export class Cells {
     }
 
     /**
+     * Validates whether given cell indices are within bounds.
+     * @param {number} row
+     * @param {number} col
+     * @returns {boolean}
+     */
+    isValidCell(row, col) {
+        return row >= 0 && row < this.noOfRows && col >= 0 && col < this.noOfColumns;
+    }
+
+    /**
      * Sets the value of a specific cell.
      * @param {number} rowIndex - The row index of the cell.
      * @param {number} columnIndex - The column index of the cell.
@@ -84,16 +94,51 @@ export class Cells {
         this.cells = newCells;
     }
 
+    /**
+     * deletes all the cells along the rowIndex row
+     * @param {number} rowIndex 
+     */
     deleteCellsOnRow(rowIndex) {
         if (rowIndex < 0 || rowIndex >= this.noOfRows) {
             throw new Error("Row index out of bounds");
         }
-        
+        this.noOfRows--;
+        const newCells = new Map();
+        for (const [key, value] of this.cells.entries()) {
+            const [r, c] = key.split(',').map(Number);
+            if (r < rowIndex) {
+                // Rows above: keep as is
+                newCells.set(key, value);
+            } else if (r > rowIndex) {
+                // Rows below: shift up by one
+                newCells.set(`${r - 1},${c}`, value);
+            }
+            // Row to delete (r === rowIndex): skip (delete)
+        }
+        this.cells = newCells;
     }
 
+    /**
+     * delets all the cells along the particular column
+     * @param {number} colIndex 
+     */
     deleteCellsOnColumn(colIndex) {
         if (colIndex < 0 || colIndex >= this.noOfColumns) {
             throw new Error("Column index out of bounds");
         }
+        this.noOfColumns--;
+        const newCells = new Map();
+        for (const [key, value] of this.cells.entries()) {
+            const [r, c] = key.split(',').map(Number);
+            if (c < colIndex) {
+                // Columns to the left: keep as is
+                newCells.set(key, value);
+            } else if (c > colIndex) {
+                // Columns to the right: shift left by one
+                newCells.set(`${r},${c - 1}`, value);
+            }
+            // Column to delete (c === colIndex): skip (delete)
+        }
+        this.cells = newCells;
     }
 }
