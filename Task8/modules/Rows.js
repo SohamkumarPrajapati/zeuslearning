@@ -38,9 +38,9 @@ export class Rows {
      * @throws Will throw an error if the row index is out of bounds.
      */
     getRowHeight(rowIndex) {
-        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
-            throw new Error("Row index out of bounds");
-        }
+        // if (rowIndex < 0 || rowIndex >= this.noOfRows) {
+        //     throw new Error("Row index out of bounds");
+        // }
         return this.alteredRows.get(rowIndex) || DEFAULT_ROW_HEIGHT;
     }
 

@@ -47,6 +47,18 @@ insertColumnRightBtn.id = "insertColumnRightBtn";
 insertColumnRightBtn.textContent = "Insert Column Right";
 insertColumnRightBtn.disabled = true;
 
+// Delete Row button (disabled)
+const deleteRowBtn = document.createElement("button");
+deleteRowBtn.id = "deleteRowBtn";
+deleteRowBtn.textContent = "Delete Row";
+deleteRowBtn.disabled = true;
+
+// Delete Column button (disabled)
+const deleteColumnBtn = document.createElement("button");
+deleteColumnBtn.id = "deleteColumnBtn";
+deleteColumnBtn.textContent = "Delete Column";
+deleteColumnBtn.disabled = true;
+
 // Stats div
 const statsDiv = document.createElement("div");
 statsDiv.className = "stats";
@@ -59,6 +71,8 @@ toolbar.appendChild(insertRowUpBtn);
 toolbar.appendChild(insertRowDownBtn);
 toolbar.appendChild(insertColumnLeftBtn);
 toolbar.appendChild(insertColumnRightBtn);
+toolbar.appendChild(deleteRowBtn);
+toolbar.appendChild(deleteColumnBtn);
 toolbar.appendChild(statsDiv);
 
 // Canvas container

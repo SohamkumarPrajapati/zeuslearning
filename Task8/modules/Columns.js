@@ -40,9 +40,9 @@ export class Columns {
      * @throws Will throw an error if the column index is out of bounds.
      */
     getColumnWidth(columnIndex) {
-        if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
-            throw new Error("Column index out of bounds");
-        }
+        // if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
+        //     throw new Error("Column index out of bounds");
+        // }
         return this.alteredWidths.get(columnIndex) || DEFAULT_COLUMN_WIDTH;
     }
 

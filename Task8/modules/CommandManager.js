@@ -135,7 +135,7 @@ export class InsertRowCommand extends Command {
         this.rowIndex = rowIndex;
         this.direction = direction; // 'up' or 'down'
     }
- 
+
     /**
      * insert the new row and perform related logic
      */
@@ -210,6 +210,62 @@ export class InsertColumnCommand extends Command {
             this.grid.columns.deleteColumn(this.colIndex + 1);
             this.grid.cells.deleteCellsOnColumn(this.colIndex + 1);
         }
+        this.grid.render();
+    }
+}
+
+
+
+export class DeleteRowCommand extends Command {
+    constructor(grid, rowIndex) {
+        super();
+        this.grid = grid;
+        this.rowIndex = rowIndex;
+        this.rowData = [];
+        for (let col = 0; col < this.grid.columns.noOfColumns; col++) {
+            this.rowData.push(this.grid.cells.getCellValue(rowIndex, col));
+        }
+        this.rowHeight = this.grid.rows.getRowHeight(rowIndex);
+    }
+    execute() {
+        this.grid.rows.deleteRow(this.rowIndex);
+        this.grid.cells.deleteCellsOnRow(this.rowIndex);
+        this.grid.render();
+    }
+    undo() {
+        this.grid.rows.insertRowUp(this.rowIndex);
+        this.grid.cells.shiftCellsToNextRow(this.rowIndex);
+        for (let col = 0; col < this.rowData.length; col++) {
+            this.grid.cells.setCellValue(this.rowIndex, col, this.rowData[col]);
+        }
+        this.grid.rows.setRowHeight(this.rowIndex, this.rowHeight);
+        this.grid.render();
+    }
+}
+
+export class DeleteColumnCommand extends Command {
+    constructor(grid, colIndex) {
+        super();
+        this.grid = grid;
+        this.colIndex = colIndex;
+        this.colData = [];
+        for (let row = 0; row < this.grid.rows.noOfRows; row++) {
+            this.colData.push(this.grid.cells.getCellValue(row, colIndex));
+        }
+        this.colWidth = this.grid.columns.getColumnWidth(colIndex);
+    }
+    execute() {
+        this.grid.columns.deleteColumn(this.colIndex);
+        this.grid.cells.deleteCellsOnColumn(this.colIndex);
+        this.grid.render();
+    }
+    undo() {
+        this.grid.columns.insertColumnLeft(this.colIndex);
+        this.grid.cells.shiftCellsToNextColumn(this.colIndex);
+        for (let row = 0; row < this.colData.length; row++) {
+            this.grid.cells.setCellValue(row, this.colIndex, this.colData[row]);
+        }
+        this.grid.columns.setColumnWidth(this.colIndex, this.colWidth);
         this.grid.render();
     }
 }

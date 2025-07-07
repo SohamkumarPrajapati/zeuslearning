@@ -41,6 +41,8 @@ export class ExcelGrid {
         this.insertRowDownBtn = document.getElementById('insertRowDownBtn');
         this.insertColumnLeftBtn = document.getElementById('insertColumnLeftBtn');
         this.insertColumnRightBtn = document.getElementById('insertColumnRightBtn');
+        this.deleteRowBtn = document.getElementById('deleteRowBtn');
+        this.deleteColumnBtn = document.getElementById('deleteColumnBtn');
 
         this.initializeCanvas();
         this.eventHandler = new EventHandler(this);
@@ -203,7 +205,15 @@ export class ExcelGrid {
         let iterationIndex = colIndex;
         while (x < this.canvas.width) {
             let colWidth = this.columns.getColumnWidth(iterationIndex);
-            this.ctx.fillStyle = this.selectionManager.isColumnSelected(iterationIndex) ? '#107c41' : '#ecf0f1';
+            // Highlight if any column selection covers this column
+            let isSelected = false;
+            for (let selection of this.selectionManager.selections.values()) {
+                if (selection.type === 'column' && iterationIndex >= selection.startCol && iterationIndex <= selection.endCol) {
+                    isSelected = true;
+                    break;
+                }
+            }
+            this.ctx.fillStyle = isSelected ? '#107c41' : '#ecf0f1';
             this.ctx.fillRect(x, y, colWidth, this.colHeaderHeight);
 
             this.ctx.beginPath();
@@ -213,7 +223,7 @@ export class ExcelGrid {
             this.ctx.lineTo(x + colWidth, y + this.colHeaderHeight);
             this.ctx.stroke();
 
-            this.ctx.fillStyle = (this.selectionManager.isColumnSelected(iterationIndex)) ? 'white' : '#616161';
+            this.ctx.fillStyle = isSelected ? 'white' : '#616161';
             this.ctx.font = '15px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText(this.columns.getColumnName(iterationIndex) || '', x + colWidth / 2, y + this.colHeaderHeight / 2);
@@ -234,7 +244,15 @@ export class ExcelGrid {
         let iterationIndex = rowIndex;
         while (y < this.canvas.height) {
             let rowHeight = this.rows.getRowHeight(iterationIndex);
-            this.ctx.fillStyle = this.selectionManager.isRowSelected(iterationIndex) ? '#107c41' : '#f5f5f5';
+            // Highlight if any row selection covers this column
+            let isSelected = false;
+            for (let selection of this.selectionManager.selections.values()) {
+                if (selection.type === 'row' && iterationIndex >= selection.startRow && iterationIndex <= selection.endRow) {
+                    isSelected = true;
+                    break;
+                }
+            }
+            this.ctx.fillStyle = isSelected ? '#107c41' : '#ecf0f1';
             this.ctx.fillRect(x, y, this.rowHeaderWidth, rowHeight);
 
             this.ctx.beginPath();
@@ -244,7 +262,7 @@ export class ExcelGrid {
             this.ctx.lineTo(x + this.rowHeaderWidth, y - 0.5 + rowHeight);
             this.ctx.stroke();
 
-            this.ctx.fillStyle = this.selectionManager.isRowSelected(iterationIndex) ? 'white' : '#616161';
+            this.ctx.fillStyle = isSelected ? 'white' : '#616161';
             this.ctx.font = '15px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText((iterationIndex + 1).toString(), x + this.rowHeaderWidth / 2, y + rowHeight / 2);
@@ -330,42 +348,54 @@ export class ExcelGrid {
 
 
     getCellAtPositionClamped(x, y) {
-        // Clamp x/y to the grid area
-        let col = -1, row = -1;
-
-        // Clamp column
-        if (x < this.rowHeaderWidth) {
-            col = 0;
-        } else {
-            let currentX = this.rowHeaderWidth - this.scrollX;
-            for (let i = 0; i < this.columns.noOfColumns; i++) {
-                const columnWidth = this.columns.getColumnWidth(i);
-                if (x >= currentX && x < currentX + columnWidth) {
-                    col = i;
-                    break;
-                }
-                currentX += columnWidth;
+        // Compute the visible grid area in grid coordinates
+        // Left/top edge in grid coordinates
+        const minGridX = this.rowHeaderWidth;
+        const minGridY = this.colHeaderHeight;
+        // Right/bottom edge in grid coordinates (actual last visible cell, not the last cell in data)
+        let maxGridX = this.rowHeaderWidth;
+        for (let i = 0; i < this.columns.noOfColumns; i++) {
+            maxGridX += this.columns.getColumnWidth(i);
+            if (maxGridX - this.scrollX > this.canvas.width) {
+                maxGridX -= this.columns.getColumnWidth(i);
+                break;
             }
-            if (col === -1) col = this.columns.noOfColumns - 1; // Clamp to last column
         }
+        maxGridX = Math.min(maxGridX, this.rowHeaderWidth + this.getTotalColumnsWidth());
 
-        // Clamp row
-        if (y < this.colHeaderHeight) {
-            row = 0;
-        } else {
-            let currentY = this.colHeaderHeight - this.scrollY;
-            for (let i = 0; i < this.rows.noOfRows; i++) {
-                const rowHeight = this.rows.getRowHeight(i);
-                if (y >= currentY && y < currentY + rowHeight) {
-                    row = i;
-                    break;
-                }
-                currentY += rowHeight;
+        let maxGridY = this.colHeaderHeight;
+        for (let i = 0; i < this.rows.noOfRows; i++) {
+            maxGridY += this.rows.getRowHeight(i);
+            if (maxGridY - this.scrollY > this.canvas.height) {
+                maxGridY -= this.rows.getRowHeight(i);
+                break;
             }
-            if (row === -1) row = this.rows.noOfRows - 1; // Clamp to last row
         }
+        maxGridY = Math.min(maxGridY, this.colHeaderHeight + this.getTotalRowsHeight());
 
-        return (row >= 0 && col >= 0) ? { row, col } : null;
+        // Clamp x and y to the visible grid area (relative to scroll)
+        const clampedX = Math.max(minGridX, Math.min(x, maxGridX - 1));
+        const clampedY = Math.max(minGridY, Math.min(y, maxGridY - 1));
+
+        return this.getCellAtPosition(clampedX, clampedY);
+    }
+
+    // Helper to get total columns width
+    getTotalColumnsWidth() {
+        let width = 0;
+        for (let i = 0; i < this.columns.noOfColumns; i++) {
+            width += this.columns.getColumnWidth(i);
+        }
+        return width;
+    }
+
+    // Helper to get total rows height
+    getTotalRowsHeight() {
+        let height = 0;
+        for (let i = 0; i < this.rows.noOfRows; i++) {
+            height += this.rows.getRowHeight(i);
+        }
+        return height;
     }
 
 
@@ -465,6 +495,7 @@ export class ExcelGrid {
         this.ctx.fillText(rowIndex + 1, xRow + this.rowHeaderWidth / 2, yRow + rowHeight / 2);
 
     }
+
 
 
     /**

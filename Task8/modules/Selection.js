@@ -8,13 +8,13 @@ import { ExcelGrid } from './ExcelGrid.js';
 export class Selection {
     constructor() {
         /** @type {number} Starting row index of the selection */
-        this.startRow = 0;
+        this.startRow = -1;
         /** @type {number} Starting column index of the selection */
-        this.startCol = 0;
+        this.startCol = -1;
         /** @type {number} Ending row index of the selection */
-        this.endRow = 0;
+        this.endRow = -1;
         /** @type {number} Ending column index of the selection */
-        this.endCol = 0;
+        this.endCol = -1;
         /** @type {string} Type of selection: 'none', 'cell', 'row', 'column', 'range' */
         this.type = 'cell';
     }
@@ -129,7 +129,7 @@ export class Selection {
 
         if (width > 0 && height > 0) {
             grid.ctx.fillRect(x, y, width, height);
-            if(drawBorders){grid.ctx.strokeRect(x, y, width, height);}
+            if (drawBorders) { grid.ctx.strokeRect(x, y, width, height); }
         }
 
         if (this.type !== 'row' && this.type !== 'column') {
@@ -150,6 +150,14 @@ export class Selection {
             grid.insertColumnLeftBtn.disabled = false;
             grid.insertColumnRightBtn.disabled = false;
         }
+
+        // ...existing code for drawing selection...
+
+        // Enable/disable delete buttons based on selection
+        const rowIsSelected = this.type === 'row';
+        const columnIsSelected = this.type === 'column';
+        grid.deleteRowBtn.disabled = !rowIsSelected;
+        grid.deleteColumnBtn.disabled = !columnIsSelected;
 
     }
 }

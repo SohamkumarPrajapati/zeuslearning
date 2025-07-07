@@ -1,5 +1,7 @@
 import { ResizeColumnCommand, ResizeRowCommand } from './CommandManager.js';
 import { InsertRowCommand, InsertColumnCommand } from './CommandManager.js';
+import { DeleteRowCommand, DeleteColumnCommand } from './CommandManager.js';
+
 
 export class EventHandler {
     /**
@@ -23,6 +25,11 @@ export class EventHandler {
         this.resizeInitialValue = null; // initial width or height
         this.resizeInitialIndex = null; // index of column/row being resized
         this.lastSelectedCell = null;
+        this.autoScrollInterval = null;
+        this.autoScrollDirection = null;
+        this.autoScrollType = null; // 'col', 'row', or 'range'
+        this.lastMouseX = 0; // Track last mouse position
+        this.lastMouseY = 0;
 
         this.setupKeyboardListeners();
         this.setupEventListeners();
@@ -176,6 +183,36 @@ export class EventHandler {
                 break;
             }
         });
+
+        this.grid.deleteRowBtn.addEventListener('click', () => {
+            let selections = this.grid.selectionManager.selections;
+            for (let selection of selections.values()) {
+                if (selection.type !== 'row') continue;
+                let startRow = selection.startRow;
+                const command = new DeleteRowCommand(this.grid, startRow);
+                this.grid.commandManager.executeCommand(command);
+                this.grid.selectionManager.resetSelections();
+                this.grid.deleteRowBtn.disabled = true;      // Disable delete row button
+                this.grid.deleteColumnBtn.disabled = true;   // Disable delete column button
+                this.grid.render();
+                break;
+            }
+        });
+
+        this.grid.deleteColumnBtn.addEventListener('click', () => {
+            let selections = this.grid.selectionManager.selections;
+            for (let selection of selections.values()) {
+                if (selection.type !== 'column') continue;
+                let startCol = selection.startCol;
+                const command = new DeleteColumnCommand(this.grid, startCol);
+                this.grid.commandManager.executeCommand(command);
+                this.grid.selectionManager.resetSelections();
+                this.grid.deleteRowBtn.disabled = true;      // Disable delete row button
+                this.grid.deleteColumnBtn.disabled = true;   // Disable delete column button
+                this.grid.render();
+                break;
+            }
+        });
     }
 
     /**
@@ -194,6 +231,8 @@ export class EventHandler {
         this.mouseDown = true;
         this.startX = x;
         this.startY = y;
+        this.lastMouseX = x; // Store initial mouse position
+        this.lastMouseY = y;
 
         // Check for resize handles
         if (this.checkResizeHandle(x, y)) {
@@ -278,6 +317,45 @@ export class EventHandler {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
+        // Always update last mouse position for auto-scroll tracking
+        this.lastMouseX = x;
+        this.lastMouseY = y;
+
+        const edgeThreshold = 10;
+        let scrollNeeded = false;
+        let direction = null;
+        let type = null;
+
+        if (this.mouseDown && this.headerDragType === 'col') {
+            if (x > this.grid.canvas.width - edgeThreshold) {
+                scrollNeeded = true; direction = 'right'; type = 'col';
+            } else if (x < this.grid.rowHeaderWidth + edgeThreshold) {
+                scrollNeeded = true; direction = 'left'; type = 'col';
+            }
+        } else if (this.mouseDown && this.headerDragType === 'row') {
+            if (y > this.grid.canvas.height - edgeThreshold) {
+                scrollNeeded = true; direction = 'down'; type = 'row';
+            } else if (y < this.grid.colHeaderHeight + edgeThreshold) {
+                scrollNeeded = true; direction = 'up'; type = 'row';
+            }
+        } else if (this.mouseDown && this.dragStart) {
+            if (x > this.grid.canvas.width - edgeThreshold) {
+                scrollNeeded = true; direction = 'right'; type = 'range';
+            } else if (x < this.grid.rowHeaderWidth + edgeThreshold) {
+                scrollNeeded = true; direction = 'left'; type = 'range';
+            } else if (y > this.grid.canvas.height - edgeThreshold) {
+                scrollNeeded = true; direction = 'down'; type = 'range';
+            } else if (y < this.grid.colHeaderHeight + edgeThreshold) {
+                scrollNeeded = true; direction = 'up'; type = 'range';
+            }
+        }
+
+        if (scrollNeeded) {
+            this.startAutoScroll(direction, type);
+        } else {
+            this.stopAutoScroll();
+        }
+
         // --- Header drag selection logic ---
         if (this.mouseDown && this.headerDragType === 'col') {
             const col = this.grid.getColumnAtPosition(x);
@@ -319,7 +397,7 @@ export class EventHandler {
         }
 
         if (this.mouseDown && this.dragStart) {
-            const cell = this.grid.getCellAtPositionClamped(x, y);
+            const cell = this.grid.getCellAtPosition(x, y);
             if (cell) {
                 this.grid.selectionManager.addRangeSelection(this.dragStart.row, this.dragStart.col, cell.row, cell.col);
                 this.grid.render();
@@ -340,6 +418,8 @@ export class EventHandler {
         this.headerDragType = null;
         this.headerDragStart = null;
         this.headerDragCurrent = null;
+
+        this.stopAutoScroll();
 
         if (this.resizing) {
             if (this.resizeType === 'col') {
@@ -506,5 +586,121 @@ export class EventHandler {
         }
     }
 
+    /**
+     * Starts auto-scrolling when dragging near canvas edges
+     * @param {string} direction - 'up', 'down', 'left', 'right'
+     * @param {string} type - 'col', 'row', or 'range'
+     */
+    startAutoScroll(direction, type) {
+        if (this.autoScrollInterval && this.autoScrollDirection === direction && this.autoScrollType === type) return;
+        this.stopAutoScroll();
+        this.autoScrollDirection = direction;
+        this.autoScrollType = type;
+        this.autoScrollInterval = setInterval(() => {
+            const scrollSpeed = 20;
+            let scrolled = false;
 
+            if (direction === 'right') {
+                const maxScrollX = this.getMaxScrollX();
+                if (this.grid.scrollX < maxScrollX) {
+                    this.grid.scrollX = Math.min(maxScrollX, this.grid.scrollX + scrollSpeed);
+                    scrolled = true;
+                }
+            } else if (direction === 'left') {
+                if (this.grid.scrollX > 0) {
+                    this.grid.scrollX = Math.max(0, this.grid.scrollX - scrollSpeed);
+                    scrolled = true;
+                }
+            } else if (direction === 'down') {
+                const maxScrollY = this.getMaxScrollY();
+                if (this.grid.scrollY < maxScrollY) {
+                    this.grid.scrollY = Math.min(maxScrollY, this.grid.scrollY + scrollSpeed);
+                    scrolled = true;
+                }
+            } else if (direction === 'up') {
+                if (this.grid.scrollY > 0) {
+                    this.grid.scrollY = Math.max(0, this.grid.scrollY - scrollSpeed);
+                    scrolled = true;
+                }
+            }
+
+            // Only update selection if we actually scrolled
+            if (scrolled) {
+                this.updateSelectionDuringAutoScroll(type);
+                this.grid.render();
+            }
+        }, 30);
+    }
+
+    /**
+     * Updates selection during auto-scroll based on virtual mouse position
+     * @param {string} type - 'col', 'row', or 'range'
+     */
+    updateSelectionDuringAutoScroll(type) {
+        // Use actual mouse position for selection updates
+        let virtualX = this.lastMouseX;
+        let virtualY = this.lastMouseY;
+
+        // Clamp to minimum bounds to prevent going into headers
+        virtualX = Math.max(this.grid.rowHeaderWidth + 1, virtualX);
+        virtualY = Math.max(this.grid.colHeaderHeight + 1, virtualY);
+
+        if (type === 'col' && this.headerDragType === 'col') {
+            const col = this.grid.getColumnAtPosition(virtualX);
+            if (col >= 0) {
+                const start = Math.min(this.headerDragStart, col);
+                const end = Math.max(this.headerDragStart, col);
+                let selection = this.grid.selectionManager.getColumnSelection(this.headerDragStart);
+                if (!selection) {
+                    selection = this.grid.selectionManager.addColumnSelection(this.headerDragStart);
+                }
+                selection.startCol = start;
+                selection.endCol = end;
+                this.headerDragCurrent = col;
+            }
+        } else if (type === 'row' && this.headerDragType === 'row') {
+            const row = this.grid.getRowAtPosition(virtualY);
+            if (row >= 0) {
+                const start = Math.min(this.headerDragStart, row);
+                const end = Math.max(this.headerDragStart, row);
+                let selection = this.grid.selectionManager.getRowSelection(this.headerDragStart);
+                if (!selection) {
+                    selection = this.grid.selectionManager.addRowSelection(this.headerDragStart);
+                }
+                selection.startRow = start;
+                selection.endRow = end;
+                this.headerDragCurrent = row;
+            }
+        } else if (type === 'range' && this.dragStart) {
+            const cell = this.grid.getCellAtPosition(virtualX, virtualY);
+            if (cell) {
+                this.grid.selectionManager.addRangeSelection(this.dragStart.row, this.dragStart.col, cell.row, cell.col);
+            }
+        }
+    }
+
+    stopAutoScroll() {
+        if (this.autoScrollInterval) {
+            clearInterval(this.autoScrollInterval);
+            this.autoScrollInterval = null;
+            this.autoScrollDirection = null;
+            this.autoScrollType = null;
+        }
+    }
+
+    // Helpers to clamp scroll
+    getMaxScrollX() {
+        let totalWidth = this.grid.rowHeaderWidth;
+        for (let i = 0; i < this.grid.columns.noOfColumns; i++) {
+            totalWidth += this.grid.columns.getColumnWidth(i);
+        }
+        return Math.max(0, totalWidth - this.grid.canvas.width);
+    }
+    getMaxScrollY() {
+        let totalHeight = this.grid.colHeaderHeight;
+        for (let i = 0; i < this.grid.rows.noOfRows; i++) {
+            totalHeight += this.grid.rows.getRowHeight(i);
+        }
+        return Math.max(0, totalHeight - this.grid.canvas.height);
+    }
 }
