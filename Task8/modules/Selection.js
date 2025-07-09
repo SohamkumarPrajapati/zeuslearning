@@ -1,4 +1,4 @@
-import { MAX_ROWS, MAX_COLS } from './Constants.js';
+import { Constants } from './Constants.js';
 import { ExcelGrid } from './ExcelGrid.js';
 
 /**
@@ -63,7 +63,7 @@ export class Selection {
     setRow(row) {
         this.startRow = this.endRow = row;
         this.startCol = 0;
-        this.endCol = MAX_COLS - 1;
+        this.endCol = Constants.MAX_COLS - 1;
         this.type = 'row';
     }
 
@@ -73,7 +73,7 @@ export class Selection {
      */
     setColumn(col) {
         this.startRow = 0;
-        this.endRow = MAX_ROWS - 1;
+        this.endRow = Constants.MAX_ROWS - 1;
         this.startCol = this.endCol = col;
         this.type = 'column';
     }

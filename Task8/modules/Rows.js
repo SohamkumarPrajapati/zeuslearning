@@ -1,4 +1,4 @@
-import { DEFAULT_ROW_HEIGHT } from './Constants.js';
+import { Constants } from './Constants.js';
 
 export class Rows {
     /**
@@ -23,7 +23,7 @@ export class Rows {
         else if (newHeight <= 0) {
             throw new Error("Row height must be greater than zero");
         }
-        if (newHeight === DEFAULT_ROW_HEIGHT) {
+        if (newHeight === Constants.DEFAULT_ROW_HEIGHT) {
             this.alteredRows.delete(rowIndex); // remove the row height if it is reset to default
             return;
         }
@@ -41,7 +41,7 @@ export class Rows {
         // if (rowIndex < 0 || rowIndex >= this.noOfRows) {
         //     throw new Error("Row index out of bounds");
         // }
-        return this.alteredRows.get(rowIndex) || DEFAULT_ROW_HEIGHT;
+        return this.alteredRows.get(rowIndex) || Constants.DEFAULT_ROW_HEIGHT;
     }
 
     /**

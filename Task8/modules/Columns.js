@@ -1,4 +1,4 @@
-import { DEFAULT_COLUMN_WIDTH } from './Constants.js';
+import { Constants } from './Constants.js';
 /**
  * Class representing the columns of the grid, including their widths and selection state.
  */
@@ -25,7 +25,7 @@ export class Columns {
         else if (newWidth <= 0) {
             throw new Error("Column width must be greater than zero");
         }
-        if (newWidth === DEFAULT_COLUMN_WIDTH) {
+        if (newWidth === Constants.DEFAULT_COLUMN_WIDTH) {
             this.alteredWidths.delete(columnIndex); // remove the column width if it is reset to default
             return;
         }
@@ -43,7 +43,7 @@ export class Columns {
         // if (columnIndex < 0 || columnIndex >= this.noOfColumns) {
         //     throw new Error("Column index out of bounds");
         // }
-        return this.alteredWidths.get(columnIndex) || DEFAULT_COLUMN_WIDTH;
+        return this.alteredWidths.get(columnIndex) || Constants.DEFAULT_COLUMN_WIDTH;
     }
 
     /**

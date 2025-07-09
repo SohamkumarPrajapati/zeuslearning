@@ -3,8 +3,8 @@ import { Rows } from './Rows.js';
 import { Columns } from './Columns.js';
 import { SelectionManager } from './Selection.js';
 import { SetCellValueCommand, CommandManager } from './CommandManager.js';
-import { MAX_COLS, MAX_ROWS } from './Constants.js';
 import { TouchAction } from './TouchAction.js';
+import { Constants } from './Constants.js';
 
 
 
@@ -19,9 +19,9 @@ export class ExcelGrid {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.rows = new Rows(MAX_ROWS);
-        this.columns = new Columns(MAX_COLS);
-        this.cells = new Cells(MAX_ROWS, MAX_COLS);
+        this.rows = new Rows(Constants.MAX_ROWS);
+        this.columns = new Columns(Constants.MAX_COLS);
+        this.cells = new Cells(Constants.MAX_ROWS, Constants.MAX_COLS);
         this.selectionManager = new SelectionManager();
         this.commandManager = new CommandManager(this);
 
@@ -57,7 +57,7 @@ export class ExcelGrid {
     initializeCanvas() {
         const container = this.canvas.parentElement;
         const dpr = window.devicePixelRatio || 1;
-        if(dpr < 1) {
+        if (dpr < 1) {
             dpr = 1;
         }
         this.canvas.width = container.clientWidth * dpr;
@@ -65,14 +65,14 @@ export class ExcelGrid {
         this.ctx.scale(dpr, dpr);
     }
 
-    
-    
+
+
     /**
      * Gets the X pixel position of a column.
      * @param {number} colIndex
      * @returns {number}
     */
-   getColumnPosition(colIndex) {
+    getColumnPosition(colIndex) {
         let x = this.rowHeaderWidth - this.scrollX;
         for (let i = 0; i < colIndex; i++) {
             const colWidth = this.columns.getColumnWidth(i);
@@ -80,8 +80,8 @@ export class ExcelGrid {
         }
         return x;
     }
-    
-    
+
+
     /**
      * Gets the Y pixel position of a row.
      * @param {number} rowIndex
@@ -95,7 +95,7 @@ export class ExcelGrid {
         }
         return y;
     }
-    
+
 
     /**
      * Converts screen x/y to cell {row, col} object.
@@ -119,7 +119,7 @@ export class ExcelGrid {
             }
             currentX += columnWidth;
         }
-        
+
         let currentY = this.colHeaderHeight - this.scrollY;
         for (let i = 0; i < this.rows.noOfRows; i++) {
             const rowHeight = this.rows.getRowHeight(i);
@@ -129,10 +129,10 @@ export class ExcelGrid {
             }
             currentY += rowHeight;
         }
-        
+
         return (row >= 0 && col >= 0) ? { row, col } : null;
     }
-    
+
     /**
      * sets the schedulaer to call render function decreasing the lagging
      * @returns void
@@ -145,21 +145,21 @@ export class ExcelGrid {
             this.render();
         });
     }
-    
+
     /**
      * Renders the grid on the canvas.
     */
-   render() {
-       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-       
-       this.ctx.strokeStyle = '#bdbdbd';
-       this.ctx.lineWidth = 0.3;
-       this.ctx.textBaseline = 'middle';
-       
-       this.drawGridCells();
-       this.drawColumnHeader();
-       this.drawRowHeader();
-       this.drawSelection();
+    render() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.strokeStyle = '#bdbdbd';
+        this.ctx.lineWidth = 0.3;
+        this.ctx.textBaseline = 'middle';
+
+        this.drawGridCells();
+        this.drawColumnHeader();
+        this.drawRowHeader();
+        this.drawSelection();
         this.drawTopLeftCorner();
 
         if (this.editingCell) {
@@ -172,7 +172,7 @@ export class ExcelGrid {
     /**
      * drawing the grid cells on the canvas
     */
-   drawGridCells() {
+    drawGridCells() {
         let x = this.rowHeaderWidth;
         let colIndex = this.getColumnAtPosition(x);
         x = this.getColumnPosition(colIndex);
@@ -185,11 +185,11 @@ export class ExcelGrid {
             y = this.getRowPosition(rowIndex);
             let rowIterator = rowIndex;
             while (y < this.canvas.height) {
-                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillStyle = Constants.CELLS_BG_COLOR;
                 this.ctx.fillRect(x, y, colWidth, this.rows.getRowHeight(rowIterator));
 
                 this.ctx.beginPath();
-                this.ctx.strokeStyle = '#71797E';
+                this.ctx.strokeStyle = Constants.CELLS_BORDER_COLOR;
                 this.ctx.moveTo(x, y - 0.5);                   // Top
                 this.ctx.lineTo(x + colWidth, y - 0.5);
                 this.ctx.moveTo(x + colWidth, y);           // Right
@@ -198,7 +198,7 @@ export class ExcelGrid {
 
                 const value = this.cells.getCellValue(rowIterator, columnIteartor);
                 if (value) {
-                    this.ctx.fillStyle = '#2c3e50';
+                    this.ctx.fillStyle = Constants.CELLS_VALUE_FONT_COLOR;
                     this.ctx.font = '14px Arial';
                     this.ctx.textAlign = 'left';
                     this.ctx.fillText(value.toString().substring(0, 15), x + 5, y + this.rows.getRowHeight(rowIterator) / 2);
@@ -228,7 +228,7 @@ export class ExcelGrid {
             let selection = this.selectionManager.selection;
             let isSelected = selection && selection.type === 'column' &&
                 iterationIndex >= selection.startCol && iterationIndex <= selection.endCol;
-            this.ctx.fillStyle = isSelected ? '#107c41' : '#ecf0f1';
+            this.ctx.fillStyle = isSelected ? Constants.HEADER_SELECTED_BG_COLOR : Constants.HEADER_NOT_SELECTED_BG_COLOR;
             this.ctx.fillRect(x, y, colWidth, this.colHeaderHeight);
 
             this.ctx.beginPath();
@@ -238,7 +238,7 @@ export class ExcelGrid {
             this.ctx.lineTo(x + colWidth, y + this.colHeaderHeight);
             this.ctx.stroke();
 
-            this.ctx.fillStyle = isSelected ? 'white' : '#616161';
+            this.ctx.fillStyle = isSelected ? 'white' : Constants.HEADER_NOT_SELECTED_FONT_COLOR;
             this.ctx.font = '15px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText(this.columns.getColumnName(iterationIndex) || '', x + colWidth / 2, y + this.colHeaderHeight / 2);
@@ -263,7 +263,7 @@ export class ExcelGrid {
             let selection = this.selectionManager.selection;
             let isSelected = selection && selection.type === 'row' &&
                 iterationIndex >= selection.startRow && iterationIndex <= selection.endRow;
-            this.ctx.fillStyle = isSelected ? '#107c41' : '#ecf0f1';
+            this.ctx.fillStyle = isSelected ? Constants.HEADER_SELECTED_BG_COLOR : Constants.HEADER_NOT_SELECTED_BG_COLOR;
             this.ctx.fillRect(x, y, this.rowHeaderWidth, rowHeight);
 
             this.ctx.beginPath();
@@ -273,7 +273,7 @@ export class ExcelGrid {
             this.ctx.lineTo(x + this.rowHeaderWidth, y - 0.5 + rowHeight);
             this.ctx.stroke();
 
-            this.ctx.fillStyle = isSelected ? 'white' : '#616161';
+            this.ctx.fillStyle = isSelected ? 'white' : Constants.HEADER_NOT_SELECTED_FONT_COLOR;
             this.ctx.font = '15px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText((iterationIndex + 1).toString(), x + this.rowHeaderWidth / 2, y + rowHeight / 2);
@@ -292,11 +292,11 @@ export class ExcelGrid {
         const width = this.rowHeaderWidth + 1;
         const height = this.colHeaderHeight + 1.2;
 
-        this.ctx.fillStyle = '#e0e0e0';
+        this.ctx.fillStyle = Constants.HEADER_TOP_LEFT_BG_COLOR;
         this.ctx.fillRect(x, y, width, height);
 
         this.ctx.beginPath();
-        this.ctx.strokeStyle = '#bdbdbd';
+        this.ctx.strokeStyle = Constants.HEADER_TOP_LEFT_BORDER_COLOR;
         this.ctx.lineWidth = 2;
         this.ctx.moveTo(x + width, y);
         this.ctx.lineTo(x + width, y + height + 1);
@@ -431,7 +431,7 @@ export class ExcelGrid {
         let yCol = 0;
         let colWidth = this.columns.getColumnWidth(colIndex);
 
-        this.ctx.fillStyle = '#caead8';
+        this.ctx.fillStyle = Constants.HEADER_HIGHLIGHT_BG_COLOR;
         this.ctx.fillRect(xRow, yRow, this.rowHeaderWidth, rowHeight);
         this.ctx.fillRect(xCol, yCol, colWidth, this.colHeaderHeight);
         this.ctx.beginPath();
@@ -440,10 +440,10 @@ export class ExcelGrid {
         this.ctx.moveTo(xCol, yCol + this.colHeaderHeight);
         this.ctx.lineTo(xCol + colWidth, yCol + this.colHeaderHeight);
         this.ctx.lineWidth = 2;
-        this.ctx.strokeStyle = '#107c41';
+        this.ctx.strokeStyle = Constants.HEADER_HIGHLIGHT_BORDER_COLOR;
         this.ctx.stroke();
 
-        this.ctx.fillStyle = '#1b703b';
+        this.ctx.fillStyle = Constants.HEADER_HIGHLIGHT_FONT_COLOR;
         this.ctx.font = '15px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.fillText(this.columns.getColumnName(colIndex) || '', xCol + colWidth / 2, yCol + this.colHeaderHeight / 2);
