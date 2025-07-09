@@ -99,7 +99,7 @@ export class Selection {
         for (let r = this.startRow; r <= this.endRow; r++) {
             for (let c = this.startCol; c <= this.endCol; c++) {
                 if (grid.cells.isValidCell(r, c)) {
-                    cells.push({ row: r, col: c, value: grid.getCellValue(r, c) });
+                    cells.push({ row: r, col: c, value: grid.cells.getCellValue(r, c) });
                 }
             }
         }
@@ -115,8 +115,8 @@ export class Selection {
         grid.ctx.strokeStyle = '#107c41';
         grid.ctx.lineWidth = 1.5;
         grid.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
-        let drawBorders = (grid.selectionManager.selectionCount === 1);
-
+        let drawBorders = true;
+        
         const startX = grid.getColumnPosition(this.startCol);
         const startY = grid.getRowPosition(this.startRow);
         const endX = grid.getColumnPosition(this.endCol + 1);
@@ -165,42 +165,29 @@ export class Selection {
 
 export class SelectionManager {
     constructor() {
-        this.selections = new Map();
-        this.selectionCount = 0;
+        this.selection = null; // Only one selection at a time
     }
 
     resetSelections() {
-        this.selections.clear();
-        this.selectionCount = 0;
+        this.selection = null;
     }
 
-    /**
-     * 
-     * @param {row} row-rowIndex of selected cell 
-     * @param {col} col- colIndex of selected cell
-     */
     addSingleCellSelection(row, col) {
-        let cellSelection = new Selection();
-        cellSelection.setCell(row, col);
-        this.selections.set(`${row},${col}`, cellSelection);
-        this.selectionCount++;
-        return cellSelection;
+        this.selection = new Selection();
+        this.selection.setCell(row, col);
+        return this.selection;
     }
 
     addRowSelection(row, endRow = row) {
-        let rowSelection = new Selection();
-        rowSelection.setRow(row);
-        this.selections.set(`${row},${-1}`, rowSelection);
-        this.selectionCount++;
-        return rowSelection;
+        this.selection = new Selection();
+        this.selection.setRow(row);
+        return this.selection;
     }
 
     addColumnSelection(col) {
-        let colSelection = new Selection();
-        colSelection.setColumn(col);
-        this.selections.set(`${-1},${col}`, colSelection);
-        this.selectionCount++;
-        return colSelection;
+        this.selection = new Selection();
+        this.selection.setColumn(col);
+        return this.selection;
     }
 
     addRangeSelection(r1, c1, r2, c2) {
@@ -209,167 +196,35 @@ export class SelectionManager {
         let endRow = Math.max(r1, r2);
         let endCol = Math.max(c1, c2);
 
-        this.resetSelections();
-        let rangeSelection = new Selection();
-        rangeSelection.setRange(startRow, startCol, endRow, endCol);
-        let key = `${startRow},${startCol}:${endRow},${endCol}`;
-        this.selections.set(key, rangeSelection);
-        this.selectionCount++;
-        return rangeSelection;
+        this.selection = new Selection();
+        this.selection.setRange(startRow, startCol, endRow, endCol);
+        return this.selection;
     }
 
-    /**
-     * remove the particular selection from map (row = -1 means row selection removal && col = -1 means col selection removal)
-     * @param {rowIndex} row 
-     * @param {colIndex} col 
-     */
-    removeSelection(row, col) {
-        if (row == -1 && col == -1) {
-            return;
-        }
-
-        for (let key of this.selections.keys()) {
-            let [r, c] = key.split(',').map(Number);
-            if (row == r && col == c) {
-                this.selections.delete(key);
-                this.selectionCount--;
-                return;
-            }
-        }
-    }
-
-    /**
-     * 
-     * @param {number} col 
-     * @returns colSelection if it exists
-     */
     getColumnSelection(col) {
-        let key = `${-1},${col}`;
-        if (this.selections.has(key)) {
-            return this.selections.get(key);
+        if (this.selection && this.selection.type === 'column' && this.selection.startCol === col) {
+            return this.selection;
         }
+        return null;
     }
 
-    /**
-     * 
-     * @param {number} row 
-     * @returns rowSelection if it exists or null otherwise
-     */
     getRowSelection(row) {
-        let key = `${row},${-1}`;
-        if (this.selections.has(key)) {
-            return this.selections.get(key);
+        if (this.selection && this.selection.type === 'row' && this.selection.startRow === row) {
+            return this.selection;
         }
+        return null;
     }
 
-    /**
-     * returns theh array of cells of all the selections
-     * @param {ExcelGrid} grid 
-     * @returns 
-     */
     getSelectedCells(grid) {
-        let cells = [];
-
-        for (let selection of this.selections.values()) {
-            for (let r = selection.startRow; r <= selection.endRow; r++) {
-                for (let c = selection.startCol; c <= selection.endCol; c++) {
-                    if (grid.cells.isValidCell(r, c)) {
-                        cells.push({ row: r, col: c, value: grid.cells.getCellValue(r, c) });  // HERE CELLS WITH ROW OR COLUMN SELECTION WILL NOT BE INCLUDED
-                    }
-                    else if (r == -1) {
-                        for (let ro = 0; ro < grid.rows.noOfRows; ro++) {
-                            cells.push({ row: ro, col: c, value: grid.cells.getCellValue(ro, c) });
-                        }
-                    }
-                    else if (c == -1) {
-                        for (let co = 0; co < grid.columns.noOfColunns; co++) {
-                            cells.push({ row: r, col: co, value: grid.cells.getCellValue(r, co) });
-                        }
-                    }
-                }
-            }
-        }
-
-        return cells;
-    }
-
-    /**
-     * returns the key after parsing it 
-     * @param {string} key 
-     * @returns 
-     */
-    parseSelectionKey(key) {
-        if (key.includes(':')) {
-            // Range selection: "startRow,startCol:endRow,endCol"
-            const [start, end] = key.split(':');
-            const [startRow, startCol] = start.split(',').map(Number);
-            const [endRow, endCol] = end.split(',').map(Number);
-            return { type: 'range', startRow, startCol, endRow, endCol };
-        } else {
-            // Single cell, row, or column: "row,col"
-            const [row, col] = key.split(',').map(Number);
-            if (row === -1) return { type: 'column', col };
-            if (col === -1) return { type: 'row', row };
-            return { type: 'cell', row, col };
-        }
-    }
-
-    /**
-     * shift only those selections which have rowindex > argument rowIndex in function
-     * @param {rowIndex} rowIndex 
-     */
-    shiftSelectionsTonextRow(rowIndex) {
-        let newSelections = new Map();
-
-        for (let [key, selection] of this.selections.entries()) {
-            let parsedKey = this.parseSelectionKey(key);
-            let [row, col] = key.split(',').map(Number);
-            if (row > rowIndex) {
-                selection.startRow++;
-                selection.endRow++;
-                newSelections.set(`${row + 1},${col}`, selection);
-            }
-            else {
-                newSelections.set(key, selection);
-            }
-        }
-
-        this.selections = newSelections;
-
-    }
-
-    /**
-     * this will shift all selections right side from the colIndex to one step next selection will colIndex won't be included
-     * @param {colIndex} colIndex 
-     */
-    shiftSelectionsToNextColumn(colIndex) {
-        let newSelections = new Map();
-
-        for (let [key, selection] of this.selections.entries()) {
-            let [row, col] = key.split(',').map(Number);
-            if (col > colIndex) {
-                selection.startCol++;
-                selection.endCol++;
-                newSelections.set(`${row},${col + 1}`, selection);
-            }
-            else {
-                newSelections.set(key, selection);
-            }
-        }
-
-        this.selections = newSelections;
+        if (!this.selection) return [];
+        return this.selection.getSelectedCells(grid);
     }
 
     isColumnSelected(colIndex) {
-        let key = `${-1},${colIndex}`;
-        return this.selections.has(key);
+        return this.selection && this.selection.type === 'column' && this.selection.startCol === colIndex;
     }
 
     isRowSelected(rowIndex) {
-        let key = `${rowIndex},${-1}`;
-        return this.selections.has(key);
+        return this.selection && this.selection.type === 'row' && this.selection.startRow === rowIndex;
     }
-
-
-
 }

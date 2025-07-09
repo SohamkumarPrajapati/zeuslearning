@@ -101,25 +101,23 @@ export class Rows {
      * @param {number} rowIndex 
      */
     deleteRow(rowIndex) {
-    if (rowIndex < 0 || rowIndex >= this.noOfRows) {
-        throw new Error("Row index out of bounds");
-    }
+        if (rowIndex < 0 || rowIndex >= this.noOfRows) {
+            throw new Error("Row index out of bounds");
+        }
 
-    // Decrease the row count
-    this.noOfRows--;
+        // Decrease the row count
+        this.noOfRows--;
 
-    this.alteredHeights?.delete(rowIndex);
+        this.alteredRows.delete(rowIndex);
 
-    if (this.alteredHeights) {
-        const newAlteredHeights = new Map();
-        for (const [idx, height] of this.alteredHeights.entries()) {
+        const newAlteredRows = new Map();
+        for (const [idx, height] of this.alteredRows.entries()) {
             if (idx > rowIndex) {
-                newAlteredHeights.set(idx - 1, height);
+                newAlteredRows.set(idx - 1, height);
             } else if (idx < rowIndex) {
-                newAlteredHeights.set(idx, height);
+                newAlteredRows.set(idx, height);
             }
         }
-        this.alteredHeights = newAlteredHeights;
+        this.alteredRows = newAlteredRows;
     }
-}
 }

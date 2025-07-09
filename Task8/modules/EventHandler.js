@@ -54,6 +54,8 @@ export class EventHandler {
                 return;
             }
 
+            
+
             const isCtrl = e.ctrlKey || e.metaKey;
             const isShift = e.shiftKey;
 
@@ -96,7 +98,7 @@ export class EventHandler {
             }
 
             if (shouldRender) {
-                this.grid.render();
+                this.grid.scheduleRender();
             }
         });
     }
@@ -129,88 +131,76 @@ export class EventHandler {
         });
 
         this.grid.insertRowUpBtn.addEventListener('click', () => {
-            let selections = this.grid.selectionManager.selections;
-            for (let selection of selections.values()) {
-                if (selection.type !== 'row') continue;
+            let selection = this.grid.selectionManager.selection;
+            if (selection && selection.type === 'row') {
                 let startRow = selection.startRow;
                 const command = new InsertRowCommand(this.grid, startRow, 'up');
                 this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addRowSelection(startRow + 1);
-                this.grid.render();
-                break;
+                this.grid.scheduleRender();
             }
         });
 
         this.grid.insertRowDownBtn.addEventListener('click', () => {
-            let selections = this.grid.selectionManager.selections;
-            for (let selection of selections.values()) {
-                if (selection.type !== 'row') continue;
+            let selection = this.grid.selectionManager.selection;
+            if (selection && selection.type === 'row') {
                 let startRow = selection.startRow;
                 const command = new InsertRowCommand(this.grid, startRow, 'down');
                 this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addRowSelection(startRow);
-                this.grid.render();
-                break;
+                this.grid.scheduleRender();
             }
         });
 
         this.grid.insertColumnLeftBtn.addEventListener('click', () => {
-            let selections = this.grid.selectionManager.selections;
-            for (let selection of selections.values()) {
-                if (selection.type !== 'column') continue;
+            let selection = this.grid.selectionManager.selection;
+            if (selection && selection.type === 'column') {
                 let startCol = selection.startCol;
                 const command = new InsertColumnCommand(this.grid, startCol, 'left');
                 this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addColumnSelection(startCol + 1);
-                this.grid.render();
-                break;
+                this.grid.scheduleRender();
             }
         });
 
         this.grid.insertColumnRightBtn.addEventListener('click', () => {
-            let selections = this.grid.selectionManager.selections;
-            for (let selection of selections.values()) {
-                if (selection.type !== 'column') continue;
+            let selection = this.grid.selectionManager.selection;
+            if (selection && selection.type === 'column') {
                 let startCol = selection.startCol;
                 const command = new InsertColumnCommand(this.grid, startCol, 'right');
                 this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addColumnSelection(startCol);
-                this.grid.render();
-                break;
+                this.grid.scheduleRender();
             }
         });
 
         this.grid.deleteRowBtn.addEventListener('click', () => {
-            let selections = this.grid.selectionManager.selections;
-            for (let selection of selections.values()) {
-                if (selection.type !== 'row') continue;
+            let selection = this.grid.selectionManager.selection;
+            if (selection && selection.type === 'row') {
                 let startRow = selection.startRow;
                 const command = new DeleteRowCommand(this.grid, startRow);
                 this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.deleteRowBtn.disabled = true;      // Disable delete row button
                 this.grid.deleteColumnBtn.disabled = true;   // Disable delete column button
-                this.grid.render();
-                break;
+                this.grid.scheduleRender();
             }
         });
 
         this.grid.deleteColumnBtn.addEventListener('click', () => {
-            let selections = this.grid.selectionManager.selections;
-            for (let selection of selections.values()) {
-                if (selection.type !== 'column') continue;
+            let selection = this.grid.selectionManager.selection;
+            if (selection && selection.type === 'column') {
                 let startCol = selection.startCol;
                 const command = new DeleteColumnCommand(this.grid, startCol);
                 this.grid.commandManager.executeCommand(command);
                 this.grid.selectionManager.resetSelections();
                 this.grid.deleteRowBtn.disabled = true;      // Disable delete row button
                 this.grid.deleteColumnBtn.disabled = true;   // Disable delete column button
-                this.grid.render();
-                break;
+                this.grid.scheduleRender();
             }
         });
     }
@@ -263,13 +253,11 @@ export class EventHandler {
                 this.headerDragType = 'col';
                 this.headerDragStart = col;
                 this.headerDragCurrent = col;
-                if (!e.ctrlKey) {
-                    this.grid.selectionManager.resetSelections();
-                }
+                this.grid.selectionManager.resetSelections();
                 // Always add the starting column to the selection
                 this.grid.selectionManager.addColumnSelection(col);
                 let selection = this.grid.selectionManager.getColumnSelection(col);
-                this.grid.render();
+                this.grid.scheduleRender();
                 // selection.drawSelection(this);
                 return;
             }
@@ -284,12 +272,10 @@ export class EventHandler {
                 this.headerDragType = 'row';
                 this.headerDragStart = row;
                 this.headerDragCurrent = row;
-                if (!e.ctrlKey) {
-                    this.grid.selectionManager.resetSelections();
-                }
+                this.grid.selectionManager.resetSelections();
                 this.grid.selectionManager.addRowSelection(row);
                 let selection = this.grid.selectionManager.getRowSelection(row);
-                this.grid.render();
+                this.grid.scheduleRender();
                 // selection.drawSelection(this);
                 return;
             }
@@ -304,7 +290,7 @@ export class EventHandler {
             this.grid.selectionManager.addSingleCellSelection(cell.row, cell.col);
             this.dragStart = cell;
             this.lastSelectedCell = cell; // <--- Track last selected cell
-            this.grid.render();
+            this.grid.scheduleRender();
         }
     }
 
@@ -369,7 +355,7 @@ export class EventHandler {
                 selection.startCol = start;
                 selection.endCol = end;
                 this.headerDragCurrent = col;
-                this.grid.render();
+                this.grid.scheduleRender();
             }
             return;
         }
@@ -386,7 +372,7 @@ export class EventHandler {
                 selection.startRow = start;
                 selection.endRow = end;
                 this.headerDragCurrent = row;
-                this.grid.render();
+                this.grid.scheduleRender();
             }
             return;
         }
@@ -400,7 +386,7 @@ export class EventHandler {
             const cell = this.grid.getCellAtPosition(x, y);
             if (cell) {
                 this.grid.selectionManager.addRangeSelection(this.dragStart.row, this.dragStart.col, cell.row, cell.col);
-                this.grid.render();
+                this.grid.scheduleRender();
             }
         }
 
@@ -465,9 +451,7 @@ export class EventHandler {
 
         const cell = this.grid.getCellAtPosition(x, y);
         if (cell) {
-            if (!e.ctrlKey) {
-                this.grid.selectionManager.resetSelections();
-            }
+            this.grid.selectionManager.resetSelections();
             this.lastSelectedCell = cell; // <--- Track last selected cell
             this.grid.startEditing(cell.row, cell.col);
             this.grid.highlightCellHeaders(cell.row, cell.col);
@@ -499,7 +483,7 @@ export class EventHandler {
             }
         }
 
-        this.grid.render();
+        this.grid.scheduleRender();
     }
 
     /**
@@ -561,12 +545,12 @@ export class EventHandler {
             const startX = this.grid.getColumnPosition(this.resizeIndex);
             const newWidth = Math.max(20, x - startX);
             this.grid.columns.setColumnWidth(this.resizeIndex, newWidth); // Just update visually
-            this.grid.render();
+            this.grid.scheduleRender();
         } else if (this.resizeType === 'row') {
             const startY = this.grid.getRowPosition(this.resizeIndex);
             const newHeight = Math.max(15, y - startY);
             this.grid.rows.setRowHeight(this.resizeIndex, newHeight); // Just update visually
-            this.grid.render();
+            this.grid.scheduleRender();
         }
     }
 
@@ -627,7 +611,7 @@ export class EventHandler {
             // Only update selection if we actually scrolled
             if (scrolled) {
                 this.updateSelectionDuringAutoScroll(type);
-                this.grid.render();
+                this.grid.scheduleRender();
             }
         }, 30);
     }
