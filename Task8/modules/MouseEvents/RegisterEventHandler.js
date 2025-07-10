@@ -1,8 +1,6 @@
 import { ColumnSelectionHandler } from './ColumnSelectionHandler.js';
 import { RowSelectionHandler } from './RowSelectionHandler.js';
 import { CellRangeSelectionHandler } from './CellRangeSelectionHandler.js';
-import { InsertRowCommand, InsertColumnCommand } from '../CommandManager.js';
-import { DeleteRowCommand, DeleteColumnCommand } from '../CommandManager.js';
 import { ExcelGrid } from '../ExcelGrid.js';
 
 export class RegisterEventHandler {
@@ -15,129 +13,13 @@ export class RegisterEventHandler {
         this.grid = grid;
         this.handlers = handlers;
         this.activeHandler = null;
-        this.lastSelectedCell = null;
         this.autoScrollInterval = null;
         this.autoScrollDirection = null;
         this.autoScrollType = null;
         this.lastMouseX = 0;
         this.lastMouseY = 0;
 
-        this.setupKeyboardListeners();
-        this.setupUIEventListeners();
         this.setupEventListeners();
-    }
-
-    /**
-     * setups the keyboard events for the excel grid object
-     */
-    setupKeyboardListeners() {
-        window.addEventListener('keydown', (e) => {
-            if (this.grid.editingCell) return;
-
-            // If a cell is selected and a character key is pressed, start editing
-            if (this.lastSelectedCell && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                this.grid.startEditing(this.lastSelectedCell.row, this.lastSelectedCell.col);
-                this.grid.cellEditor.value = e.key;
-                this.grid.cellEditor.setSelectionRange(1, 1);
-                e.preventDefault();
-                return;
-            }
-
-            const isCtrl = e.ctrlKey || e.metaKey;
-            const isShift = e.shiftKey;
-
-            // Undo/Redo
-            if (isCtrl && e.key.toLowerCase() === 'z') {
-                e.preventDefault();
-                if (isShift) {
-                    this.grid.commandManager.redo();
-                } else {
-                    this.grid.commandManager.undo();
-                }
-                return;
-            }
-
-            // Arrow key scrolling
-            const scrollSpeed = 50;
-            let shouldRender = false;
-
-            switch (e.key) {
-                case 'ArrowRight':
-                    this.grid.scrollX += scrollSpeed;
-                    shouldRender = true;
-                    e.preventDefault();
-                    break;
-                case 'ArrowLeft':
-                    this.grid.scrollX = Math.max(0, this.grid.scrollX - scrollSpeed);
-                    shouldRender = true;
-                    e.preventDefault();
-                    break;
-                case 'ArrowDown':
-                    this.grid.scrollY += scrollSpeed;
-                    shouldRender = true;
-                    e.preventDefault();
-                    break;
-                case 'ArrowUp':
-                    this.grid.scrollY = Math.max(0, this.grid.scrollY - scrollSpeed);
-                    shouldRender = true;
-                    e.preventDefault();
-                    break;
-            }
-
-            if (shouldRender) {
-                this.grid.scheduleRender();
-            }
-        });
-    }
-
-    /**
-     * setsup the ui events for excel grid object as clicks and keydowns
-     */
-    setupUIEventListeners() {
-        // File input
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                this.grid.loadJSONFile(file);
-            }
-        });
-
-        // Cell editor
-        this.grid.cellEditor.addEventListener('blur', () => this.grid.stopEditing());
-        this.grid.cellEditor.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.grid.stopEditing();
-            } else if (e.key === 'Escape') {
-                this.grid.cancelEditing();
-            }
-        });
-
-        // Row insertion buttons
-        this.grid.insertRowUpBtn.addEventListener('click', () => {
-            this.handleRowInsertion('up');
-        });
-
-        this.grid.insertRowDownBtn.addEventListener('click', () => {
-            this.handleRowInsertion('down');
-        });
-
-        // Column insertion buttons
-        this.grid.insertColumnLeftBtn.addEventListener('click', () => {
-            this.handleColumnInsertion('left');
-        });
-
-        this.grid.insertColumnRightBtn.addEventListener('click', () => {
-            this.handleColumnInsertion('right');
-        });
-
-        // Delete buttons
-        this.grid.deleteRowBtn.addEventListener('click', () => {
-            this.handleRowDeletion();
-        });
-
-        this.grid.deleteColumnBtn.addEventListener('click', () => {
-            this.handleColumnDeletion();
-        });
     }
 
     /**
@@ -147,8 +29,6 @@ export class RegisterEventHandler {
         window.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-        this.grid.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
-        this.grid.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
     }
 
     /**
@@ -184,7 +64,7 @@ export class RegisterEventHandler {
         if (this.activeHandler instanceof CellRangeSelectionHandler) {
             const cell = this.grid.getCellAtPosition(x, y);
             if (cell) {
-                this.lastSelectedCell = cell;
+                this.grid.lastSelectedCell = cell;
             }
         }
 
@@ -228,45 +108,6 @@ export class RegisterEventHandler {
 
         this.stopAutoScroll();
         this.updateCursor(x, y);
-    }
-
-    /**
-     * handle dounble click on the window and checks if the input box should open or not
-     * @param {Event} e 
-     */
-    handleDoubleClick(e) {
-        const rect = this.grid.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        const cell = this.grid.getCellAtPosition(x, y);
-        if (cell) {
-            this.grid.selectionManager.resetSelections();
-            this.lastSelectedCell = cell;
-            this.grid.startEditing(cell.row, cell.col);
-            this.grid.highlightCellHeaders(cell.row, cell.col);
-        }
-    }
-
-    /**
-     * scrolls and rerender the canvas based on the wheel scrolling
-     * @param {Event} e 
-     */
-    handleWheel(e) {
-        e.preventDefault();
-
-        if (e.shiftKey) {
-            this.grid.scrollX = Math.max(0, this.grid.scrollX + e.deltaY);
-        } else {
-            if (e.deltaX !== 0) {
-                this.grid.scrollX = Math.max(0, this.grid.scrollX + e.deltaX);
-            }
-            if (e.deltaY !== 0) {
-                this.grid.scrollY = Math.max(0, this.grid.scrollY + e.deltaY);
-            }
-        }
-
-        this.grid.scheduleRender();
     }
 
     /**
@@ -419,87 +260,7 @@ export class RegisterEventHandler {
         this.grid.insertColumnRightBtn.disabled = true;
     }
 
-    /**
-     * turn on the ui buttons
-     */
-    enableUIButtons() {
-        this.grid.insertRowUpBtn.disabled = false;
-        this.grid.insertRowDownBtn.disabled = false;
-        this.grid.insertColumnLeftBtn.disabled = false;
-        this.grid.insertColumnRightBtn.disabled = false;
-    }
-
-    /**
-     * inserts the row based on the directs up or bottom to the selected row
-     * @param {string} direction 
-     */
-    handleRowInsertion(direction) {
-        const selection = this.grid.selectionManager.selection;
-        if (selection && selection.type === 'row') {
-            const startRow = selection.startRow;
-            const command = new InsertRowCommand(this.grid, startRow, direction);
-            this.grid.commandManager.executeCommand(command);
-            this.grid.selectionManager.resetSelections();
-
-            const newRow = direction === 'up' ? startRow + 1 : startRow;
-            this.grid.selectionManager.addRowSelection(newRow);
-            this.grid.scheduleRender();
-        }
-    }
-
-    /**
-     * inserts the column based on the direction
-     * @param {string} direction 
-     */
-    handleColumnInsertion(direction) {
-        const selection = this.grid.selectionManager.selection;
-        if (selection && selection.type === 'column') {
-            const startCol = selection.startCol;
-            const command = new InsertColumnCommand(this.grid, startCol, direction);
-            this.grid.commandManager.executeCommand(command);
-            this.grid.selectionManager.resetSelections();
-
-            const newCol = direction === 'left' ? startCol + 1 : startCol;
-            this.grid.selectionManager.addColumnSelection(newCol);
-            this.grid.scheduleRender();
-        }
-    }
-
-    /**
-     * deleted the row
-     */
-    handleRowDeletion() {
-        const selection = this.grid.selectionManager.selection;
-        if (selection && selection.type === 'row') {
-            const startRow = selection.startRow;
-            const command = new DeleteRowCommand(this.grid, startRow);
-            this.grid.commandManager.executeCommand(command);
-            this.grid.selectionManager.resetSelections();
-
-            // Disable delete buttons
-            this.grid.deleteRowBtn.disabled = true;
-            this.grid.deleteColumnBtn.disabled = true;
-            this.grid.scheduleRender();
-        }
-    }
-
-    /**
-     * deletes the column from the canvas
-     */
-    handleColumnDeletion() {
-        const selection = this.grid.selectionManager.selection;
-        if (selection && selection.type === 'column') {
-            const startCol = selection.startCol;
-            const command = new DeleteColumnCommand(this.grid, startCol);
-            this.grid.commandManager.executeCommand(command);
-            this.grid.selectionManager.resetSelections();
-
-            // Disable delete buttons
-            this.grid.deleteRowBtn.disabled = true;
-            this.grid.deleteColumnBtn.disabled = true;
-            this.grid.scheduleRender();
-        }
-    }
+    
 
     // Helper methods for scroll bounds
     /**

@@ -36,6 +36,7 @@ export class ExcelGrid {
         // Cell editor setup
         this.cellEditor = document.getElementById('cellEditor');
         this.editingCell = null;
+        this.lastSelectedCell = null;
 
 
         //Row Column Insertion
@@ -56,7 +57,7 @@ export class ExcelGrid {
     */
     initializeCanvas() {
         const container = this.canvas.parentElement;
-        const dpr = window.devicePixelRatio || 1;
+        let dpr = window.devicePixelRatio || 1;
         if (dpr < 1) {
             dpr = 1;
         }
@@ -131,6 +132,37 @@ export class ExcelGrid {
         }
 
         return (row >= 0 && col >= 0) ? { row, col } : null;
+    }
+
+
+    /**
+ * Returns the last visible column index in the viewport.
+ * @returns {number}
+ */
+    getVisibleColumnEnd() {
+        let x = this.rowHeaderWidth - this.scrollX;
+        for (let i = 0; i < this.columns.noOfColumns; i++) {
+            x += this.columns.getColumnWidth(i);
+            if (x >= this.canvas.width) {
+                return i;
+            }
+        }
+        return this.columns.noOfColumns - 1;
+    }
+
+    /**
+     * Returns the last visible row index in the viewport.
+     * @returns {number}
+     */
+    getVisibleRowEnd() {
+        let y = this.colHeaderHeight - this.scrollY;
+        for (let i = 0; i < this.rows.noOfRows; i++) {
+            y += this.rows.getRowHeight(i);
+            if (y >= this.canvas.height) {
+                return i;
+            }
+        }
+        return this.rows.noOfRows - 1;
     }
 
     /**

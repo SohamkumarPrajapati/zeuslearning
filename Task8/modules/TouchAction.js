@@ -5,6 +5,8 @@ import { RowSelectionHandler } from './MouseEvents/RowSelectionHandler.js';
 import { CellRangeSelectionHandler } from './MouseEvents/CellRangeSelectionHandler.js';
 import { RegisterEventHandler } from './MouseEvents/RegisterEventHandler.js';
 import { ExcelGrid } from './ExcelGrid.js';
+import { KeyBoardEventHandler } from './KeyBoardEventHandler.js';
+import { UIEventHandler } from './UIEventHandler.js';
 
 export class TouchAction {
     /**
@@ -22,5 +24,7 @@ export class TouchAction {
         ];
 
         this.registerEventHandler = new RegisterEventHandler(this.grid, this.handlers);
+        this.keyBoardEventHandler = new KeyBoardEventHandler(this.grid);
+        this.uIEventHandler = new UIEventHandler(this.grid);
     }
 }

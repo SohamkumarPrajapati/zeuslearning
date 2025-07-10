@@ -133,12 +133,7 @@ export class Selection {
         }
 
         if (this.type !== 'row' && this.type !== 'column') {
-            for (let i = this.startCol; i <= this.endCol; i++) {
-                grid.highlightCellHeaders(this.startRow, i);
-            }
-            for (let i = this.startRow; i <= this.endRow; i++) {
-                grid.highlightCellHeaders(i, this.startCol);
-            }
+            this._highlightHeaders(grid);
         }
 
         if (this.type === 'row') {
@@ -151,14 +146,27 @@ export class Selection {
             grid.insertColumnRightBtn.disabled = false;
         }
 
-        // ...existing code for drawing selection...
-
         // Enable/disable delete buttons based on selection
         const rowIsSelected = this.type === 'row';
         const columnIsSelected = this.type === 'column';
         grid.deleteRowBtn.disabled = !rowIsSelected;
         grid.deleteColumnBtn.disabled = !columnIsSelected;
 
+    }
+
+    _highlightHeaders(grid) {
+        // Only highlight visible headers to improve performance
+        const visibleStartCol = Math.max(0, this.startCol);
+        const visibleEndCol = Math.min(this.endCol, grid.getVisibleColumnEnd());
+        const visibleStartRow = Math.max(0, this.startRow);
+        const visibleEndRow = Math.min(this.endRow, grid.getVisibleRowEnd());
+
+        for (let i = visibleStartCol; i <= visibleEndCol; i++) {
+            grid.highlightCellHeaders(this.startRow, i);
+        }
+        for (let i = visibleStartRow; i <= visibleEndRow; i++) {
+            grid.highlightCellHeaders(i, this.startCol);
+        }
     }
 }
 
