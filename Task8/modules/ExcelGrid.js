@@ -436,8 +436,8 @@ export class ExcelGrid {
         const columnWidth = this.columns.getColumnWidth(col);
         const rowHeight = this.rows.getRowHeight(row);
 
-        this.cellEditor.style.left = x - 1 + 'px';
-        this.cellEditor.style.top = y - 1 + 'px';
+        this.cellEditor.style.left = x - 2 + 'px';
+        this.cellEditor.style.top = y - 2 + 'px';
         this.cellEditor.style.width = columnWidth + 'px';
         this.cellEditor.style.height = rowHeight + 'px';
         this.cellEditor.style.display = 'block';

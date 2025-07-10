@@ -1,9 +1,9 @@
-import { ColumnResizeHandler } from './MouseEvents/ColumnResizeHandler.js';
-import { RowResizeHandler } from './MouseEvents/RowResizeHandler.js';
-import { ColumnSelectionHandler } from './MouseEvents/ColumnSelectionHandler.js';
-import { RowSelectionHandler } from './MouseEvents/RowSelectionHandler.js';
-import { CellRangeSelectionHandler } from './MouseEvents/CellRangeSelectionHandler.js';
-import { RegisterEventHandler } from './MouseEvents/RegisterEventHandler.js';
+import { ColumnResizeHandler } from './PointerEvents/ColumnResize.js';
+import { RowResizeHandler } from './PointerEvents/RowResize.js';
+import { ColumnSelectionHandler } from './PointerEvents/ColumnSelection.js';
+import { RowSelectionHandler } from './PointerEvents/RowSelection.js';
+import { CellRangeSelectionHandler } from './PointerEvents/CellRangeSelection.js';
+import { PointerEventHandler } from './PointerEvents/PointerEventHandler.js';
 import { ExcelGrid } from './ExcelGrid.js';
 import { KeyBoardEventHandler } from './KeyBoardEventHandler.js';
 import { UIEventHandler } from './UIEventHandler.js';
@@ -23,7 +23,7 @@ export class TouchAction {
             new CellRangeSelectionHandler(this.grid)
         ];
 
-        this.registerEventHandler = new RegisterEventHandler(this.grid, this.handlers);
+        this.pointerEventHandler = new PointerEventHandler(this.grid, this.handlers);
         this.keyBoardEventHandler = new KeyBoardEventHandler(this.grid);
         this.uIEventHandler = new UIEventHandler(this.grid);
     }

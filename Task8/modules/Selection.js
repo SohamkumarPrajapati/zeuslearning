@@ -116,7 +116,7 @@ export class Selection {
         grid.ctx.lineWidth = 1.5;
         grid.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
         let drawBorders = true;
-        
+
         const startX = grid.getColumnPosition(this.startCol);
         const startY = grid.getRowPosition(this.startRow);
         const endX = grid.getColumnPosition(this.endCol + 1);
@@ -151,6 +151,34 @@ export class Selection {
         const columnIsSelected = this.type === 'column';
         grid.deleteRowBtn.disabled = !rowIsSelected;
         grid.deleteColumnBtn.disabled = !columnIsSelected;
+
+        // Highlight the anchor cell (first cell of selection) with a different color
+        if (grid.lastSelectedCell) {
+            const { row, col } = grid.lastSelectedCell;
+            // Only highlight if the cell is within the current selection
+            if (
+                row >= this.startRow && row <= this.endRow &&
+                col >= this.startCol && col <= this.endCol
+            ) {
+                const cellX = grid.getColumnPosition(col);
+                const cellY = grid.getRowPosition(row);
+                const cellW = grid.columns.getColumnWidth(col);
+                const cellH = grid.rows.getRowHeight(row);
+
+                // Only draw if visible
+                if (
+                    cellX + cellW > grid.rowHeaderWidth &&
+                    cellY + cellH > grid.colHeaderHeight &&
+                    cellX < grid.canvas.width &&
+                    cellY < grid.canvas.height
+                ) {
+                    grid.ctx.save();
+                    grid.ctx.fillStyle = 'white'; // Or any color you want for the anchor cell
+                    grid.ctx.fillRect(cellX + 1, cellY + 1, cellW - 2, cellH - 2);
+                    grid.ctx.restore();
+                }
+            }
+        }
 
     }
 

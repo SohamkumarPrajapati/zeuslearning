@@ -1,9 +1,9 @@
-import { ColumnSelectionHandler } from './ColumnSelectionHandler.js';
-import { RowSelectionHandler } from './RowSelectionHandler.js';
-import { CellRangeSelectionHandler } from './CellRangeSelectionHandler.js';
+import { ColumnSelectionHandler } from './ColumnSelection.js';
+import { RowSelectionHandler } from './RowSelection.js';
+import { CellRangeSelectionHandler } from './CellRangeSelection.js';
 import { ExcelGrid } from '../ExcelGrid.js';
 
-export class RegisterEventHandler {
+export class PointerEventHandler {
     /**
      * initialize the handler object for all possible events
      * @param {ExcelGrid} grid 
@@ -16,8 +16,6 @@ export class RegisterEventHandler {
         this.autoScrollInterval = null;
         this.autoScrollDirection = null;
         this.autoScrollType = null;
-        this.lastMouseX = 0;
-        this.lastMouseY = 0;
 
         this.setupEventListeners();
     }
@@ -26,9 +24,9 @@ export class RegisterEventHandler {
      * setsup handling events for the register event handler class
      */
     setupEventListeners() {
-        window.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-        window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-        window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+        window.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
+        window.addEventListener('pointermove', (e) => this.handlePointerMove(e));
+        window.addEventListener('pointerup', (e) => this.handlePointerUp(e));
     }
 
     /**
@@ -36,15 +34,12 @@ export class RegisterEventHandler {
      * @param {Event} e 
      * @returns void
      */
-    handleMouseDown(e) {
+    handlePointerDown(e) {
         const rect = this.grid.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
         if (x < 0 || y < 0) return;
-
-        this.lastMouseX = x;
-        this.lastMouseY = y;
 
         // Find the appropriate handler
         this.activeHandler = null;
@@ -60,14 +55,6 @@ export class RegisterEventHandler {
             this.updateCursor(x, y);
         }
 
-        // Track last selected cell for keyboard input
-        if (this.activeHandler instanceof CellRangeSelectionHandler) {
-            const cell = this.grid.getCellAtPosition(x, y);
-            if (cell) {
-                this.grid.lastSelectedCell = cell;
-            }
-        }
-
         // Disable UI buttons during interaction
         this.disableUIButtons();
     }
@@ -76,7 +63,7 @@ export class RegisterEventHandler {
      * checks the cursor type based on the hitTest from the event handles and calls its respective pointermove functions
      * @param {Event} e 
      */
-    handleMouseMove(e) {
+    handlePointerMove(e) {
         const rect = this.grid.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -96,7 +83,7 @@ export class RegisterEventHandler {
      * wraps the event handlers by calling their pointerdown function
      * @param {Event} e 
      */
-    handleMouseUp(e) {
+    handlePointerUp(e) {
         const rect = this.grid.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -230,9 +217,24 @@ export class RegisterEventHandler {
      */
     updateSelectionDuringAutoScroll() {
         if (this.activeHandler && this.activeHandler.pointerMove) {
-            // Use the last mouse position for selection updates during auto-scroll
-            let virtualX = Math.max(this.grid.rowHeaderWidth + 1, this.lastMouseX);
-            let virtualY = Math.max(this.grid.colHeaderHeight + 1, this.lastMouseY);
+            let virtualX = this.lastMouseX;
+            let virtualY = this.lastMouseY;
+
+            // Move the virtual pointer to the edge in the scroll direction
+            switch (this.autoScrollDirection) {
+                case 'right':
+                    virtualX = this.grid.canvas.width - 1;
+                    break;
+                case 'left':
+                    virtualX = this.grid.rowHeaderWidth + 1;
+                    break;
+                case 'down':
+                    virtualY = this.grid.canvas.height - 1;
+                    break;
+                case 'up':
+                    virtualY = this.grid.colHeaderHeight + 1;
+                    break;
+            }
 
             this.activeHandler.pointerMove(virtualX, virtualY, null);
         }
@@ -260,7 +262,7 @@ export class RegisterEventHandler {
         this.grid.insertColumnRightBtn.disabled = true;
     }
 
-    
+
 
     // Helper methods for scroll bounds
     /**

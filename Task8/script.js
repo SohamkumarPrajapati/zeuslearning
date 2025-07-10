@@ -1,112 +1,119 @@
 import { ExcelGrid } from "./modules/ExcelGrid.js";
 
+class ExcelApp {
+    constructor() {
+        this.createDOM();
+        this.grid = new ExcelGrid(this.canvas);
 
-document.body.innerHTML = "";
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            this.grid.initializeCanvas();
+            this.grid.render();
+        });
+    }
 
-// Container
-const container = document.createElement("div");
-container.className = "container";
+    createDOM() {
+        document.body.innerHTML = "";
 
-// Toolbar
-const toolbar = document.createElement("div");
-toolbar.className = "toolbar";
+        // Container
+        this.container = document.createElement("div");
+        this.container.className = "container";
 
-// File input (hidden)
-const fileInput = document.createElement("input");
-fileInput.type = "file";
-fileInput.id = "fileInput";
-fileInput.accept = ".json";
-fileInput.style.display = "none";
+        // Toolbar
+        this.toolbar = document.createElement("div");
+        this.toolbar.className = "toolbar";
 
-// Load JSON button
-const loadBtn = document.createElement("button");
-loadBtn.textContent = "Load JSON File";
-loadBtn.onclick = () => fileInput.click();
+        // File input (hidden)
+        this.fileInput = document.createElement("input");
+        this.fileInput.type = "file";
+        this.fileInput.id = "fileInput";
+        this.fileInput.accept = ".json";
+        this.fileInput.style.display = "none";
 
-// Insert Row Up button (disabled)
-const insertRowUpBtn = document.createElement("button");
-insertRowUpBtn.id = "insertRowUpBtn";
-insertRowUpBtn.textContent = "Insert Row Up";
-insertRowUpBtn.disabled = true;
+        // Load JSON button
+        this.loadBtn = document.createElement("button");
+        this.loadBtn.textContent = "Load JSON File";
+        this.loadBtn.onclick = () => this.fileInput.click();
 
-// Insert Row Down button (disabled)
-const insertRowDownBtn = document.createElement("button");
-insertRowDownBtn.id = "insertRowDownBtn";
-insertRowDownBtn.textContent = "Insert Row Down";
-insertRowDownBtn.disabled = true;
+        // Insert Row Up button (disabled)
+        this.insertRowUpBtn = document.createElement("button");
+        this.insertRowUpBtn.id = "insertRowUpBtn";
+        this.insertRowUpBtn.textContent = "Insert Row Up";
+        this.insertRowUpBtn.disabled = true;
 
-// Insert Column Left button (disabled)
-const insertColumnLeftBtn = document.createElement("button");
-insertColumnLeftBtn.id = "insertColumnLeftBtn";
-insertColumnLeftBtn.textContent = "Insert Column Left";
-insertColumnLeftBtn.disabled = true;
+        // Insert Row Down button (disabled)
+        this.insertRowDownBtn = document.createElement("button");
+        this.insertRowDownBtn.id = "insertRowDownBtn";
+        this.insertRowDownBtn.textContent = "Insert Row Down";
+        this.insertRowDownBtn.disabled = true;
 
-// Insert Column Right button (disabled)
-const insertColumnRightBtn = document.createElement("button");
-insertColumnRightBtn.id = "insertColumnRightBtn";
-insertColumnRightBtn.textContent = "Insert Column Right";
-insertColumnRightBtn.disabled = true;
+        // Insert Column Left button (disabled)
+        this.insertColumnLeftBtn = document.createElement("button");
+        this.insertColumnLeftBtn.id = "insertColumnLeftBtn";
+        this.insertColumnLeftBtn.textContent = "Insert Column Left";
+        this.insertColumnLeftBtn.disabled = true;
 
-// Delete Row button (disabled)
-const deleteRowBtn = document.createElement("button");
-deleteRowBtn.id = "deleteRowBtn";
-deleteRowBtn.textContent = "Delete Row";
-deleteRowBtn.disabled = true;
+        // Insert Column Right button (disabled)
+        this.insertColumnRightBtn = document.createElement("button");
+        this.insertColumnRightBtn.id = "insertColumnRightBtn";
+        this.insertColumnRightBtn.textContent = "Insert Column Right";
+        this.insertColumnRightBtn.disabled = true;
 
-// Delete Column button (disabled)
-const deleteColumnBtn = document.createElement("button");
-deleteColumnBtn.id = "deleteColumnBtn";
-deleteColumnBtn.textContent = "Delete Column";
-deleteColumnBtn.disabled = true;
+        // Delete Row button (disabled)
+        this.deleteRowBtn = document.createElement("button");
+        this.deleteRowBtn.id = "deleteRowBtn";
+        this.deleteRowBtn.textContent = "Delete Row";
+        this.deleteRowBtn.disabled = true;
 
-// Stats div
-const statsDiv = document.createElement("div");
-statsDiv.className = "stats";
-statsDiv.id = "stats";
+        // Delete Column button (disabled)
+        this.deleteColumnBtn = document.createElement("button");
+        this.deleteColumnBtn.id = "deleteColumnBtn";
+        this.deleteColumnBtn.textContent = "Delete Column";
+        this.deleteColumnBtn.disabled = true;
 
-// Append all toolbar elements
-toolbar.appendChild(fileInput);
-toolbar.appendChild(loadBtn);
-toolbar.appendChild(insertRowUpBtn);
-toolbar.appendChild(insertRowDownBtn);
-toolbar.appendChild(insertColumnLeftBtn);
-toolbar.appendChild(insertColumnRightBtn);
-toolbar.appendChild(deleteRowBtn);
-toolbar.appendChild(deleteColumnBtn);
-toolbar.appendChild(statsDiv);
+        // Stats div
+        this.statsDiv = document.createElement("div");
+        this.statsDiv.className = "stats";
+        this.statsDiv.id = "stats";
 
-// Canvas container
-const canvasContainer = document.createElement("div");
-canvasContainer.className = "canvas-container";
+        // Append all toolbar elements
+        this.toolbar.appendChild(this.fileInput);
+        this.toolbar.appendChild(this.loadBtn);
+        this.toolbar.appendChild(this.insertRowUpBtn);
+        this.toolbar.appendChild(this.insertRowDownBtn);
+        this.toolbar.appendChild(this.insertColumnLeftBtn);
+        this.toolbar.appendChild(this.insertColumnRightBtn);
+        this.toolbar.appendChild(this.deleteRowBtn);
+        this.toolbar.appendChild(this.deleteColumnBtn);
+        this.toolbar.appendChild(this.statsDiv);
 
-// Canvas
-const canvas = document.createElement("canvas");
-canvas.id = "gridCanvas";
+        // Canvas container
+        this.canvasContainer = document.createElement("div");
+        this.canvasContainer.className = "canvas-container";
 
-// Cell editor input
-const cellEditor = document.createElement("input");
-cellEditor.type = "text";
-cellEditor.className = "cell-editor";
-cellEditor.id = "cellEditor";
-cellEditor.style.display = "none";
+        // Canvas
+        this.canvas = document.createElement("canvas");
+        this.canvas.id = "gridCanvas";
 
-// Append canvas and editor to canvas container
-canvasContainer.appendChild(canvas);
-canvasContainer.appendChild(cellEditor);
+        // Cell editor input
+        this.cellEditor = document.createElement("input");
+        this.cellEditor.type = "text";
+        this.cellEditor.className = "cell-editor";
+        this.cellEditor.id = "cellEditor";
+        this.cellEditor.style.display = "none";
 
-// Append toolbar and canvas container to container
-container.appendChild(toolbar);
-container.appendChild(canvasContainer);
+        // Append canvas and editor to canvas container
+        this.canvasContainer.appendChild(this.canvas);
+        this.canvasContainer.appendChild(this.cellEditor);
 
-// Append container to body
-document.body.appendChild(container);
+        // Append toolbar and canvas container to container
+        this.container.appendChild(this.toolbar);
+        this.container.appendChild(this.canvasContainer);
 
+        // Append container to body
+        document.body.appendChild(this.container);
+    }
+}
 
 // Initialize the application
-const grid = new ExcelGrid(canvas);
-
-// Handle window resize
-window.addEventListener('resize', () => {
-    grid.initializeCanvas();
-    grid.render();
-});
+new ExcelApp();
